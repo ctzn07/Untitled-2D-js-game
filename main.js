@@ -14,6 +14,7 @@ window.addEventListener('load', function(){
             this.width = width;
             this.height = height;
             this.deltaTime = 0;
+            this.timeOld = Date.now();
             //since constructor runs on creation, use it to create all the relevant classes as well
             this.player = new Player(this);
             this.input = new InputHandler();
@@ -21,6 +22,10 @@ window.addEventListener('load', function(){
         update(){
             //all updated math goes here
 
+            //update deltaTime
+            this.deltaTime = (Date.now() - this.timeOld)/1000;
+            this.timeOld = Date.now()
+            //relay inputs to Player
             this.player.update(this.input.keys);
         }
         draw(context){
@@ -32,6 +37,7 @@ window.addEventListener('load', function(){
     //this triggers the creation of new game class, and run constructor with it
     const game = new Game(canvas.width, canvas.height);
     console.log(game);
+
 
 
     function animate(){
