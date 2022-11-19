@@ -1,5 +1,7 @@
 import {Player} from './player.js';
 import {InputHandler} from './input.js';
+import {Vec} from './vector.js';
+import { gameObject } from './gameObject.js';
 
 
 //load event : JavaScript waits for all dependent resources such as stylesheets and images to be fully loaded and available before it runs
@@ -13,6 +15,7 @@ window.addEventListener('load', function(){
         constructor(width, height){
             this.width = width;
             this.height = height;
+            this.gameScale = 1; //use to scale all sprites in game
             this.deltaTime = 0;
             this.timeOld = Date.now();
             //since constructor runs on creation, use it to create all the relevant classes as well
@@ -37,7 +40,8 @@ window.addEventListener('load', function(){
     //this triggers the creation of new game class, and run constructor with it
     const game = new Game(canvas.width, canvas.height);
     console.log(game);
-
+    const testobject = new gameObject(game, new Vec(250,250), false, player, new Vec(4,2));
+    console.log(testobject);
 
 
     function animate(){
@@ -46,6 +50,7 @@ window.addEventListener('load', function(){
         game.update();
         //call game object to run draw, using ctx as context
         game.draw(ctx);
+        testobject.draw(ctx, 2);
         requestAnimationFrame(animate);
     }
     animate();

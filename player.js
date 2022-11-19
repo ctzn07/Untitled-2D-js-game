@@ -1,9 +1,12 @@
 //class is not a copy of an object, but points to existing one, use New class to create copies
+
+
 export class Player{
     constructor(game){
         this.game = game;
-        this.width = 16;
-        this.height = 16;
+        this.width = 32; //sprite X size
+        this.height = 32; //sprite Y size
+        this.spriteScale = game.gameScale;
         this.x = 0;
         this.y = 0;
 
@@ -23,7 +26,10 @@ export class Player{
         //console.log(this.x, this.y);
     }
     draw(context){
-        context.drawImage(this.image, this.x, this.y, this.width, this.height)
+        //arguments as follow:  
+        //image file, sprite startpixel X, sprite startpixel Y, sprite size X, sprite size Y
+        //image draw start X, image draw start Y, relative image draw end X, relative image draw end Y          
+        context.drawImage(this.image, 0, 0, this.width, this.height, this.x, this.y, this.width*this.spriteScale, this.height*this.spriteScale);
 
     }
 }
