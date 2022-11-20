@@ -1,7 +1,63 @@
 //class is not a copy of an object, but points to existing one, use New class to create copies
+import { gameObject } from "./gameObject.js";
+import {InputHandler} from './input.js';
+import{Vec} from './vector.js';
+
+export class Player extends gameObject{
+    constructor(game, spawnPos, tilemap, tilemapSize){
+        super(game, spawnPos, true, tilemap, tilemapSize);
+        this.input = new InputHandler();
+        this.inputVec = new Vec(1,1);
+    }
+    update(deltaTime){
+        super.update(deltaTime);
+         // reset input vector
+         this.inputVec.zero();
+
+        //.includes() method determines whether an array includes a certain value among its entries, returning true or false as approriate
+         if(this.input.keys.includes('d')){this.inputVec.x++;}
+         if(this.input.keys.includes('a')){this.inputVec.x--;}
+         if(this.input.keys.includes('w')){this.inputVec.y--;}
+         if(this.input.keys.includes('s')){this.inputVec.y++;}
+         this.inputVec = this.inputVec.normalize();
+         this.physics.addMovementInput(this.inputVec, 5, 10);
+         //console.log(this.inputVec);
+         
+         
+
+    }
+    draw(context){
+        if(this.physics.velocity.x < 0){this.animationFrame = 4;}
+        else {this.animationFrame = 0;}
+        super.draw(context, this.animationFrame);
+    }
+}
 
 
-export class Player{
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//this is the old player class
+
+/*export class Player{
     constructor(game){
         this.game = game;
         this.width = 32; //sprite X size
@@ -32,4 +88,4 @@ export class Player{
         context.drawImage(this.image, 0, 0, this.width, this.height, this.x, this.y, this.width*this.spriteScale, this.height*this.spriteScale);
 
     }
-}
+}*/
