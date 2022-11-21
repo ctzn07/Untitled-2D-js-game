@@ -17,10 +17,11 @@ window.addEventListener('load', function(){
             this.gameScale = 1; //use to scale all sprites in game
             this.deltaTime = 0;
             this.timeOld = Date.now();
+            this.cameraPosition = new Vec(0,0);
             //since constructor runs on creation, use it to create all the relevant classes as well
 
             //param list: game, spawn position, spritesheet ref, spritesheet size
-            this.player = new Player(this, new Vec(25,25), player, new Vec(4,2));
+            this.player = new Player(this, new Vec(250,250), player, new Vec(4,2));
             //
         }
         update(deltaTime){

@@ -16,4 +16,15 @@ export class Vec{
     normalize(){return new Vec(this.x/this.length() || 0, this.y/this.length() || 0);}
     zero(){this.x = 0, this.y = 0;}
     toString(){return `Vec{x: ${this.x}, y: ${this.y}}`;}
+    //no return functions with N-prefix
+    Nplus(otherVec){this.x += otherVec.x||0, this.y += otherVec.y||0;}
+    NplusValue(value){this.x += value||0, this.y += value||0;}
+    Nminus(otherVec){this.x -= otherVec.x||0, this.y -= otherVec.y||0;}
+    NminusValue(value){this.x -= value||0, this.y -= value||0;}
+    Nmultiply(otherVec) {this.x *= otherVec.x||0, this.y *= otherVec.y||0;}
+    NmultiplyValue(value){this.x *= value||0, this.y *= value||0;}
+    Ndivide(otherVec){this.x /= otherVec.x||0, this.y /= otherVec.y||0;}
+    NdivideValue(value){this.x /= value||0, this.y /= value||0;}
+    Nnormalize(){this.x = this.x/this.length()||0, this.y = this.y/this.length()||0;}
+    
 }

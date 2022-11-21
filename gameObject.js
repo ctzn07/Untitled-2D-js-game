@@ -9,6 +9,7 @@ export class gameObject{
         //physics
         this.enablePhysics = bSimulatePhysics;
         this.physics = new Physics(this);
+        this.velocity = new Vec(0,0);
         //graphics
         this.sprite = sprite;
         this.spriteSize = new Vec(this.sprite.width, this.sprite.height).divide(tilemapSize);

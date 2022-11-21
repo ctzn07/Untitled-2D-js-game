@@ -11,23 +11,26 @@ export class Player extends gameObject{
     }
     update(deltaTime){
         super.update(deltaTime);
-         // reset input vector
-         this.inputVec.zero();
+         // reset input vector, DO NOT REMOVE
+         this.inputVec.zero(); 
 
         //.includes() method determines whether an array includes a certain value among its entries, returning true or false as approriate
          if(this.input.keys.includes('d')){this.inputVec.x++;}
          if(this.input.keys.includes('a')){this.inputVec.x--;}
          if(this.input.keys.includes('w')){this.inputVec.y--;}
          if(this.input.keys.includes('s')){this.inputVec.y++;}
-         this.inputVec = this.inputVec.normalize();
-         this.physics.addMovementInput(this.inputVec, 5, 10);
+         this.inputVec.Nnormalize();
+
+         
+         
+         this.physics.addMovementInput(this.inputVec, 5, 5);
          //console.log(this.inputVec);
          
          
 
     }
     draw(context){
-        if(this.physics.velocity.x < 0){this.animationFrame = 4;}
+        if(this.velocity.x < 0){this.animationFrame = 4;}
         else {this.animationFrame = 0;}
         super.draw(context, this.animationFrame);
     }
