@@ -22,7 +22,7 @@ window.addEventListener('load', function(){
 
             //param list: game, spawn position, spritesheet ref, spritesheet size
             this.player = new Player(this, new Vec(250,250), player, new Vec(4,2));
-            //
+            //JavaScript automatically creates references to all elements with IDs into the global namespace, using it's ID as a variable name, see index.html to see where the player variable comes from
         }
         update(deltaTime){
             //all updated math goes here
