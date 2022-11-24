@@ -8,6 +8,8 @@ export class Physics{
         {
             //apply velocity to world location
             this.parent.worldLocation.Nplus(this.parent.velocity);
+            //to prevent absurdly small calculations
+            if(this.parent.velocity.length()<0.001){this.parent.velocity.zero()};
         }
     }
     addMovementInput(inputVector, Acceleration, MaxSpeed){

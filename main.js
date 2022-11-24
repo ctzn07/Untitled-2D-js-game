@@ -31,7 +31,7 @@ window.addEventListener('load', function(){
             this.deltaTime = (Date.now() - this.timeOld)/1000;
             this.timeOld = Date.now()
             //relay inputs to Player
-            this.player.update();
+            this.player.update(deltaTime);
         }
         draw(context){
             //all canvas draws go here

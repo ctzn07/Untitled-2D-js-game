@@ -3,6 +3,8 @@ import{Vec} from './vector.js';
 import {Physics} from './physics.js';
 import {Animation} from './animation.js'
 
+
+
 export class gameObject{
     constructor(game, location, bSimulatePhysics = true, sprite, tilemapSize = Vec(1,1)){
         this.game = game;
@@ -41,6 +43,18 @@ export class gameObject{
             //image draw start X, image draw start Y, relative image draw end X, relative image draw end Y
             //NOTE:Canvas draw start X and Y need to be integers to avoid graphical glitches
             //(how does it even draw half pixels?)
+        }
+    }
+    newAnim(animObject){
+        if(this.animHandler){
+            //if this is first animation, set it as current animation
+            if(!this.animHandler.animcount){
+                this.animHandler.currentAnimation = animObject.animation;
+                console.log('current animation set to:', this.animHandler.currentAnimation);
+            }
+            this.animHandler.animcount++;
+            
+            this.animHandler.animations[animObject.animation] = animObject;
         }
     }
 }
