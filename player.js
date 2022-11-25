@@ -7,7 +7,7 @@ import{Vec} from './vector.js';
 
 export class Player extends gameObject{
     constructor(game, spawnPos, tilemap, tilemapSize){
-        super(game, spawnPos, true, tilemap, tilemapSize);
+        super(game, spawnPos, ['moving', 'block'], tilemap, tilemapSize);
         this.input = new InputHandler();
         this.inputVec = new Vec(0,0);
         this.createAnimations();
@@ -57,12 +57,12 @@ export class Player extends gameObject{
             exitAnimation: 'walkleft',
             update: function(){
                 //rotate lerp between 0 and last frame index, if greater than last index reset to 0
-                this.lerp += this.parent.game.deltaTime*this.parent.velocity.length()*this.animationspeed;
+                this.lerp += this.parent.game.deltaTime*this.parent.physics.velocity.length()*this.animationspeed;
                 this.lerp *= (this.lerp<this.frame.length);
                 //update is expected to return current animation frame
                 return this.frame[Math.floor(this.lerp)];
             }, 
-            exitcondition: function(){return this.parent.velocity.x<0;}
+            exitcondition: function(){return this.parent.physics.velocity.x<0;}
         }));
 
         this.newAnim(Object.create({
@@ -74,12 +74,12 @@ export class Player extends gameObject{
             exitAnimation: 'walkright',
             update: function(){
                 //rotate lerp between 0 and last frame index, if greater than last index reset to 0
-                this.lerp += this.parent.game.deltaTime*this.parent.velocity.length()*this.animationspeed;
+                this.lerp += this.parent.game.deltaTime*this.parent.physics.velocity.length()*this.animationspeed;
                 this.lerp *= (this.lerp<this.frame.length);
                 return this.frame[Math.floor(this.lerp)];
             }, 
             //update is expected to return current animation frame
-            exitcondition: function(){return this.parent.velocity.x>0;}
+            exitcondition: function(){return this.parent.physics.velocity.x>0;}
         }));
     }
 }

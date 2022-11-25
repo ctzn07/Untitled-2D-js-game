@@ -3,26 +3,23 @@ import{Vec} from './vector.js';
 import {Physics} from './physics.js';
 import {Animation} from './animation.js'
 
-
-
 export class gameObject{
-    constructor(game, location, bSimulatePhysics = true, sprite, tilemapSize = Vec(1,1)){
+    constructor(game, spawnPos, physicsTags =[], tilemap, tilemapSize = new Vec(0,0)){
         this.game = game;
-        this.worldLocation = location;
-        //physics
-        this.enablePhysics = bSimulatePhysics;
-        this.physics = new Physics(this);
-        this.velocity = new Vec(0,0);
+        this.worldLocation = spawnPos;
         //graphics
-        this.sprite = sprite;
+        this.sprite = tilemap;
         this.spriteSize = new Vec(this.sprite.width, this.sprite.height).divide(tilemapSize);
         this.animationFrame = 0;
         //only add animation handler if there's something to animate
-        if(this.spriteSize.length()){this.animHandler = new Animation(this);}
+        if(tilemapSize.x > 1 || tilemapSize.y > 1)this.animHandler = new Animation(this);
+        this.tags = physicsTags;
+        this.physics = new Physics(this);
+        
     }
     update(deltaTime){
         //only update physics if object is simulating
-        if(this.enablePhysics){this.physics.update(deltaTime);}
+        if(this.tags.includes('moving'))this.physics.update(deltaTime);
         //only update animations if there are any
         if(this.animHandler){this.animHandler.update()};
     }
@@ -50,7 +47,7 @@ export class gameObject{
             //if this is first animation, set it as current animation
             if(!this.animHandler.animcount){
                 this.animHandler.currentAnimation = animObject.animation;
-                console.log('current animation set to:', this.animHandler.currentAnimation);
+                //console.log('current animation set to:', this.animHandler.currentAnimation);
             }
             this.animHandler.animcount++;
             

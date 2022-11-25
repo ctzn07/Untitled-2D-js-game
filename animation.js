@@ -24,4 +24,4 @@ export class Animation{
     }
 }  
 
-function lerp (start, end, amt){return (1-amt)*start+amt*end;}
+//function lerp (start, end, amt){return (1-amt)*start+amt*end;}

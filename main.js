@@ -1,4 +1,5 @@
 import {Player} from './player.js';
+import {MapTile} from './mapTile.js';
 import {Vec} from './vector.js';
 import {gameObject} from './gameObject.js';
 
@@ -9,6 +10,7 @@ window.addEventListener('load', function(){
     const ctx = canvas.getContext('2d');
     canvas.width = 500;
     canvas.height = 500;
+    const DrawCollisionDebug = true;
 
     class Game{
         constructor(width, height){
@@ -20,22 +22,49 @@ window.addEventListener('load', function(){
             this.cameraPosition = new Vec(0,0);
             //since constructor runs on creation, use it to create all the relevant classes as well
 
+            this.gameObjects = [];  //list of all gameobjects
+
+
             //param list: game, spawn position, spritesheet ref, spritesheet size
-            this.player = new Player(this, new Vec(250,250), player, new Vec(4,2));
+            this.player = new Player(this, new Vec(100,100), player, new Vec(4,2));
+            //add to gameobject list
+            this.gameObjects.push(this.player);
+            //var blocker = new gameObject(this, new Vec(250,250), ['static', 'block'], testblock, new Vec(1,1));
+            this.blocker = new MapTile(this, new Vec(250, 250), testblock, new Vec(1,1));
+            this.gameObjects.push(this.blocker);
+
+            console.log(this.gameObjects);
+            //this.player.physics.collisionCheck(blocker);
+            
             //JavaScript automatically creates references to all elements with IDs into the global namespace, using it's ID as a variable name, see index.html to see where the player variable comes from
+            
         }
         update(deltaTime){
             //all updated math goes here
-
+            //console.log(this.player.physics.collisionCheck(this.blocker));
             //update deltaTime
             this.deltaTime = (Date.now() - this.timeOld)/1000;
             this.timeOld = Date.now()
-            //relay inputs to Player
-            this.player.update(deltaTime);
+            //run update() on all gameobjects
+            this.gameObjects.forEach(gameObject => {
+                gameObject.update(this.deltaTime);
+            });
+
+            /*this.gameObjects.forEach(a => {
+                this.gameObjects.forEach(b =>{
+                    if(a && b)console.log(a.physics.collisionCheck(b));
+                })
+            });*/
+
+            
+
         }
         draw(context){
-            //all canvas draws go here
-            this.player.draw(context);
+            //run draw() on all gameobjects
+            this.gameObjects.forEach(gameObject => {
+                gameObject.draw(context);
+                if(DrawCollisionDebug && gameObject.physics){gameObject.physics.drawCollision(context)};
+            });
 
         }
     }
