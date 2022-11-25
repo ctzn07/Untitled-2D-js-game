@@ -33,12 +33,12 @@ export class Physics{
         //Separating Axis Theorem (SAT)
         //https://gamedevelopment.tutsplus.com/tutorials/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331
 
-        if(this.bBox.max.y+this.parent.worldLocation.y < otherobj.physics.bBox.min.x+otherobj.worldLocation.x || 
-        this.bBox.min.x+this.parent.worldLocation.x > otherobj.physics.bBox.x+otherobj.worldLocation.x)
+        if(this.bBox.max.x+this.parent.worldLocation.x < otherobj.physics.bBox.min.x+otherobj.worldLocation.x || 
+        this.bBox.min.x+this.parent.worldLocation.x > otherobj.physics.bBox.max.x+otherobj.worldLocation.x)
         {return false;}
 
-        if(this.bBox.max.y+this.parent.worldLocation.y < otherobj.physics.bBox.min.y ||
-        this.bBox.min.y+this.parent.worldLocation.y > otherobj.physics.bBox.y + otherobj.worldLocation.y){return false;}
+        if(this.bBox.max.y+this.parent.worldLocation.y < otherobj.physics.bBox.min.y + otherobj.worldLocation.y ||
+        this.bBox.min.y+this.parent.worldLocation.y > otherobj.physics.bBox.max.y + otherobj.worldLocation.y){return false;}
         
 
         // No separating axis found, therefor there is at least one overlapping axis
