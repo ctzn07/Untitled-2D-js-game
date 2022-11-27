@@ -44,14 +44,24 @@ export class Physics{
         // No separating axis found, therefor there is at least one overlapping axis
         return true;
     }
+    penetrationCheck(otherobj){
+        return ;
+    }
 
-    drawCollision(context){
+    drawCollision(context, cameraPosition){
         context.beginPath();
         context.lineWidth = "2";
         context.strokeStyle = 'red';
-        context.rect(this.parent.worldLocation.x+this.bBox.min.x, 
-                            this.parent.worldLocation.y+this.bBox.min.y, 
+        context.rect((this.parent.worldLocation.x+this.bBox.min.x)-(cameraPosition.x-this.parent.game.width/2), 
+                            (this.parent.worldLocation.y+this.bBox.min.y)-(cameraPosition.y-this.parent.game.height/2), 
                             this.parent.spriteSize.x, this.parent.spriteSize.y);
+
+        context.font = '12px Verdana';
+        context.fillText(this.parent.worldLocation.floor(), 
+        this.parent.worldLocation.x-(cameraPosition.x-this.parent.game.width/2)-65, 
+        this.parent.worldLocation.y-(cameraPosition.y-this.parent.game.height/2) -20);
+        context.fillStyle = "#ff9429";
         context.stroke();
+
     }
 }

@@ -23,18 +23,20 @@ export class gameObject{
         //only update animations if there are any
         if(this.animHandler){this.animHandler.update()};
     }
-    draw(context, frame){
+    draw(context, cameraPosition, frame){
         
         if(this.sprite){    //only draw if sprite is valid
             //calculate the sprite draw starting position based on sprite index
             var drawStart = new Vec(frame % (this.sprite.width / this.spriteSize.x), Math.floor(frame / (this.sprite.width / this.spriteSize.x))).multiply(this.spriteSize);
 
             //draw specific index of tilemap
-            context.drawImage(this.sprite, drawStart.x, drawStart.y, this.spriteSize.x, this.spriteSize.y, 
-            Math.round(this.worldLocation.x-(this.spriteSize.x/2*this.game.gameScale)),
-            Math.round(this.worldLocation.y-(this.spriteSize.y/2*this.game.gameScale)),
-            this.spriteSize.x*this.game.gameScale,
-            this.spriteSize.y*this.game.gameScale);
+            context.drawImage
+            (this.sprite, drawStart.x, drawStart.y,
+            this.spriteSize.x, this.spriteSize.y, 
+            (this.worldLocation.x-this.spriteSize.x/2)-(cameraPosition.x-this.game.width/2), 
+            (this.worldLocation.y-this.spriteSize.y/2)-(cameraPosition.y-this.game.height/2),
+            this.spriteSize.x,
+            this.spriteSize.y);
             //arguments as follow:  
             //image file, sprite startpixel X, sprite startpixel Y, sprite size X, sprite size Y
             //image draw start X, image draw start Y, relative image draw end X, relative image draw end Y
@@ -53,5 +55,18 @@ export class gameObject{
             
             this.animHandler.animations[animObject.animation] = animObject;
         }
+    }
+
+    //Converting 2D co-ordinates into 1D index
+    //y * width + x
+
+    //Converting 1D index into 2D co-ordinates
+    //y = index / width;
+    //x = index % width;
+
+    getObjectIndex(){
+        //convert2Dto1D(arrWidth){return Math.round(this.y*arrWidth) + Math.round(this.x);}
+        //convert1Dto2D(index, arrWidth){return new Vec(index % arrWidth, index/arrWidth);}
+        return Math.round(this.worldLocation.y/this.worldTileSize) + Math.round(this.worldLocation.x/this.worldTileSize);
     }
 }

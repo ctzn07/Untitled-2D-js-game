@@ -16,6 +16,9 @@ export class Vec{
     normalize(){return new Vec(this.x/this.length() || 0, this.y/this.length() || 0);}
     zero(){this.x = 0, this.y = 0;}
     toString(){return `Vec{x: ${this.x}, y: ${this.y}}`;}
+    floor(){return new Vec(Math.floor(this.x), Math.floor(this.y));}
+    //lerp(startVec, endVec, amt){return (1-amt)*start+amt*end;}
+    lerp(otherVec, amt){return this.multiplyValue(1-amt).plus(otherVec.multiplyValue(amt));}
     //no return functions with N-prefix
     Nplus(otherVec){this.x += otherVec.x||0, this.y += otherVec.y||0;}
     NplusValue(value){this.x += value||0, this.y += value||0;}

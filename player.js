@@ -28,8 +28,8 @@ export class Player extends gameObject{
          //console.log(this.inputVec);
 
     }
-    draw(context){
-        super.draw(context, this.animationFrame);
+    draw(context, cameraPosition){
+        super.draw(context, cameraPosition, this.animationFrame);
     }
     createAnimations(){
         
