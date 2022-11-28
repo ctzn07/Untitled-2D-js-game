@@ -1,6 +1,7 @@
 import {Player} from './player.js';
 import {MapTile} from './mapTile.js';
 import {Vec} from './vector.js';
+import {Level} from './level.js';
 import {gameObject} from './gameObject.js';
 
 
@@ -17,27 +18,27 @@ window.addEventListener('load', function(){
         constructor(width, height){
             this.width = width;
             this.height = height;
+            this.level = new Level(this, testlevel, testlevel_collision);
             this.deltaTime = 0;
             this.timeOld = Date.now();
             this.cameraPosition = new Vec(250,250);
-            this.worldTileSize = new Vec(500, 500); //addGameObject() adjusts this
-            this.worldSize = new Vec(1, 1);     //INSERT MAP IMAGE SIZE TO THIS LATER
+            this.worldTileSize = new Vec(32, 32); //should this be square root of 1024(map size)?
+            this.worldSize = new Vec(this.level.mapSprite.width, this.level.mapSprite.height);
 
             //since constructor runs on creation, use it to create all the relevant classes as well
             this.gameObjects = [];  //list of all gameobjects
+            this.physicsObjects = []; //list of all objects with collision
 
 
             //param list: game, spawn position, spritesheet ref, spritesheet size
             this.player = new Player(this, new Vec(100,100), player, new Vec(4,2));
-            //add to gameobject list
-            this.addGameObject(this.player);
+            //add to gameObjects list
+            this.gameObjects.push(this.player);
+            
             
             
             //COLLISION DEBUG BOX
-            this.blocker = new MapTile(this, new Vec(250, 250), testblock, new Vec(1,1));
-            this.addGameObject(this.blocker);
-
-            console.log(this.gameObjects);
+            
             
             //JavaScript automatically creates references to all elements with IDs into the global namespace, using it's ID as a variable name, see index.html to see where the player variable comes from
             
@@ -49,6 +50,7 @@ window.addEventListener('load', function(){
             //update deltaTime
             this.deltaTime = (Date.now() - this.timeOld)/1000;
             this.timeOld = Date.now()
+            
             //run update() on all gameobjects
             this.gameObjects.forEach(gameObject => {
                 gameObject.update(this.deltaTime);
@@ -64,25 +66,43 @@ window.addEventListener('load', function(){
 
         }
         draw(context, cameraPosition){
+            this.level.draw(context);
             //run draw() on all gameobjects
             this.gameObjects.forEach(gameObject => {
                 if(gameObject){
                     gameObject.draw(context, this.cameraPosition);
-                    //debug drawings
-                    if(DrawCollisionDebug && gameObject.physics)
-                    {gameObject.physics.drawCollision(context, this.cameraPosition)};
+
                 }
             });
         }
-        addGameObject(gameObject){
 
-            //this.gameObjects[i] = gameObject;
-            this.gameObjects.push(gameObject);
+        //Converting 2D co-ordinates into 1D index
+        //y * width + x
 
-            //adjust gameObjects array object size to smallest used one
-            if(gameObject.spriteSize.x < this.worldTileSize.x)this.worldTileSize.x = gameObject.spriteSize.x;
-            if(gameObject.spriteSize.y < this.worldTileSize.y)this.worldTileSize.y = gameObject.spriteSize.y;
+        //Converting 1D index into 2D co-ordinates
+        //y = index / width;
+        //x = index % width;
 
+        locToIndex(loc){
+            //returns 1D index value of world location with accuracy of worldTileSize
+            let arrWidth = Math.floor((this.worldSize.x-this.level.topleft.x)/this.worldTileSize.x);
+            let thisY = Math.round((loc.y-this.level.topleft.y)/this.worldTileSize.y);
+            let thisX = Math.round((loc.x-this.level.topleft.x)/this.worldTileSize.x);
+            
+            return thisY * arrWidth + thisX;
+        }
+        indexToLocation(index){
+            //returns 2D world coordinate from 1D index value with accuracy of worldTileSize
+            let arrWidth = Math.round((this.worldSize.x-this.level.topleft.x)/this.worldTileSize.x);
+            
+            return new Vec(index%arrWidth, Math.floor(index/arrWidth)).multiply(this.worldTileSize).plus(this.level.topleft);
+        }
+        getContext(){
+            //returns canvas context
+            return ctx;
+        }
+        drawDebug(){
+            return DrawCollisionDebug;
         }
         
     }
@@ -97,7 +117,7 @@ window.addEventListener('load', function(){
         game.update();
         //call game object to run draw, using ctx as context
         game.draw(ctx);
-        //testobject.draw(ctx, 0);
+
         requestAnimationFrame(animate);
     }
     animate();

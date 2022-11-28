@@ -16,8 +16,7 @@ export class Player extends gameObject{
         super.update(deltaTime);
          // reset input vector, DO NOT REMOVE
          this.inputVec.zero(); 
-         
-        //.includes() method determines whether an array includes a certain value among its entries, returning true or false as approriate
+
          if(this.input.keys.includes('d')){this.inputVec.x++;}
          if(this.input.keys.includes('a')){this.inputVec.x--;}
          if(this.input.keys.includes('w')){this.inputVec.y--;}
@@ -30,6 +29,7 @@ export class Player extends gameObject{
     }
     draw(context, cameraPosition){
         super.draw(context, cameraPosition, this.animationFrame);
+        
     }
     createAnimations(){
         
@@ -83,3 +83,20 @@ export class Player extends gameObject{
         }));
     }
 }
+
+/*
+if(true){
+    let index = this.game.locToIndex(this.worldLocation);
+    let loc = this.game.indexToLocation(index);
+    
+    context.rect((loc.x+this.physics.bBox.min.x)-(this.game.cameraPosition.x-this.game.width/2),
+                (loc.y+this.physics.bBox.min.y)-(this.game.cameraPosition.y-this.game.height/2),
+                this.spriteSize.x, this.spriteSize.y);
+                context.strokeStyle = 'blue';
+
+                context.font = '12px Verdana';
+                context.fillText(loc, 
+                loc.x-(this.game.cameraPosition.x-this.game.width/2)-65, 
+                loc.y-(this.game.cameraPosition.y-this.game.height/2)+32);
+                context.fillStyle = "#1f1f1f";
+                context.stroke();*/

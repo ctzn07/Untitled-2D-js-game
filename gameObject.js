@@ -7,6 +7,7 @@ export class gameObject{
     constructor(game, spawnPos, physicsTags =[], tilemap, tilemapSize = new Vec(0,0)){
         this.game = game;
         this.worldLocation = spawnPos;
+        this.worldIndex = 0;
         //graphics
         this.sprite = tilemap;
         this.spriteSize = new Vec(this.sprite.width, this.sprite.height).divide(tilemapSize);
@@ -14,27 +15,43 @@ export class gameObject{
         //only add animation handler if there's something to animate
         if(tilemapSize.x > 1 || tilemapSize.y > 1)this.animHandler = new Animation(this);
         this.tags = physicsTags;
-        this.physics = new Physics(this);
+        if(this.tags.includes('moving'))this.physics = new Physics(this);
         
     }
     update(deltaTime){
         //only update physics if object is simulating
-        if(this.tags.includes('moving'))this.physics.update(deltaTime);
+        if(this.physics){
+            this.physics.update(deltaTime);
+
+
+            //COLLISION CHECK BEFORE THIS LINE -----------------------------------------
+            //This updates objects current position to collision check array (game.physicsObjects)
+            if(this.game.locToIndex(this.worldLocation) != this.worldIndex){
+                //remove from old index
+                this.game.physicsObjects.splice(this.worldIndex, 1);
+                //get new index
+                this.worldIndex = this.game.locToIndex(this.worldLocation);
+                //set to new index
+                this.game.physicsObjects[this.worldIndex] = this;
+            }
+        }
         //only update animations if there are any
         if(this.animHandler){this.animHandler.update()};
+        
+        
     }
     draw(context, cameraPosition, frame){
         
         if(this.sprite){    //only draw if sprite is valid
             //calculate the sprite draw starting position based on sprite index
-            var drawStart = new Vec(frame % (this.sprite.width / this.spriteSize.x), Math.floor(frame / (this.sprite.width / this.spriteSize.x))).multiply(this.spriteSize);
+            var drawStart = new Vec(Math.floor(frame % (this.sprite.width / this.spriteSize.x)), 
+            Math.floor(frame / (this.sprite.width / this.spriteSize.x))).multiply(this.spriteSize);
 
             //draw specific index of tilemap
             context.drawImage
-            (this.sprite, drawStart.x, drawStart.y,
-            this.spriteSize.x, this.spriteSize.y, 
-            (this.worldLocation.x-this.spriteSize.x/2)-(cameraPosition.x-this.game.width/2), 
-            (this.worldLocation.y-this.spriteSize.y/2)-(cameraPosition.y-this.game.height/2),
+            (this.sprite, drawStart.x, drawStart.y, this.spriteSize.x, this.spriteSize.y, 
+            Math.floor((this.worldLocation.x-this.spriteSize.x/2)-(cameraPosition.x-this.game.width/2)), 
+            Math.floor((this.worldLocation.y-this.spriteSize.y/2)-(cameraPosition.y-this.game.height/2)),
             this.spriteSize.x,
             this.spriteSize.y);
             //arguments as follow:  
@@ -42,6 +59,10 @@ export class gameObject{
             //image draw start X, image draw start Y, relative image draw end X, relative image draw end Y
             //NOTE:Canvas draw start X and Y need to be integers to avoid graphical glitches
             //(how does it even draw half pixels?)
+
+            //if DrawCollisionDebug = true, Draw collision boxes
+            if(this.game.drawDebug() && this.physics){this.physics.drawCollision()};
+
         }
     }
     newAnim(animObject){
@@ -52,21 +73,9 @@ export class gameObject{
                 //console.log('current animation set to:', this.animHandler.currentAnimation);
             }
             this.animHandler.animcount++;
-            
+            //set animation to named index
             this.animHandler.animations[animObject.animation] = animObject;
         }
     }
 
-    //Converting 2D co-ordinates into 1D index
-    //y * width + x
-
-    //Converting 1D index into 2D co-ordinates
-    //y = index / width;
-    //x = index % width;
-
-    getObjectIndex(){
-        //convert2Dto1D(arrWidth){return Math.round(this.y*arrWidth) + Math.round(this.x);}
-        //convert1Dto2D(index, arrWidth){return new Vec(index % arrWidth, index/arrWidth);}
-        return Math.round(this.worldLocation.y/this.worldTileSize) + Math.round(this.worldLocation.x/this.worldTileSize);
-    }
 }
