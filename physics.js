@@ -48,20 +48,25 @@ export class Physics{
         return ;
     }
 
-    drawCollision(context, cameraPosition){
+    drawCollision(){
+        //draw debug rectangle and location text for gameObject
+        let context = this.parent.game.getContext();
         context.beginPath();
         context.lineWidth = "2";
         context.strokeStyle = 'red';
-        context.rect((this.parent.worldLocation.x+this.bBox.min.x)-(cameraPosition.x-this.parent.game.width/2), 
-                            (this.parent.worldLocation.y+this.bBox.min.y)-(cameraPosition.y-this.parent.game.height/2), 
+        let gameSizeHalf = new Vec(this.parent.game.width/2, this.parent.game.height/2);
+        let camPos = this.parent.game.cameraPosition;
+        context.rect((this.parent.worldLocation.x+this.bBox.min.x)-(camPos.x-gameSizeHalf.x), 
+                            (this.parent.worldLocation.y+this.bBox.min.y)-(camPos.y-gameSizeHalf.y), 
                             this.parent.spriteSize.x, this.parent.spriteSize.y);
 
         context.font = '12px Verdana';
         context.fillText(this.parent.worldLocation.floor(), 
-        this.parent.worldLocation.x-(cameraPosition.x-this.parent.game.width/2)-65, 
-        this.parent.worldLocation.y-(cameraPosition.y-this.parent.game.height/2) -20);
-        context.fillStyle = "#ff9429";
+        this.parent.worldLocation.x-(camPos.x-this.parent.game.width/2)-65, 
+        this.parent.worldLocation.y-(camPos.y-this.parent.game.height/2) -20);
+        context.fillStyle = "#1f1f1f";
         context.stroke();
+        
 
     }
 }
