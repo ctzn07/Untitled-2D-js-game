@@ -44,13 +44,5 @@ export class Level{
             }
         }
     }
-    drawCollision(context){
-        context.beginPath();
-        context.lineWidth = "2";
-        context.strokeStyle = 'red';
-        context.rect((this.parent.worldLocation.x+this.bBox.min.x)-(cameraPosition.x-this.parent.game.width/2), 
-                            (this.parent.worldLocation.y+this.bBox.min.y)-(cameraPosition.y-this.parent.game.height/2), 
-                            this.parent.spriteSize.x, this.parent.spriteSize.y);
-    }
 
 }

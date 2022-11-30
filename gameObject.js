@@ -8,19 +8,20 @@ export class gameObject{
         this.game = game;
         this.worldLocation = spawnPos;
         this.worldIndex = -1;
+
         //graphics
         this.sprite = tilemap;
         this.spriteSize = new Vec(this.sprite.width, this.sprite.height).divide(tilemapSize);
         this.animationFrame = 0;
         //only add animation handler if there's something to animate
         if(tilemapSize.x > 1 || tilemapSize.y > 1)this.animHandler = new Animation(this);
+
+        //physics
         this.tags = physicsTags;
         if(this.tags.includes('block')){
             //add physics handler
             this.physics = new Physics(this);
             //add to game instance physics array
-            //this.game.physicsObjects.push(this);
-            //console.log(this, 'added to physics array');
             this.updateWorldIndex();
         }
         //add to game instance gameObjects array for update() and draw() calls
@@ -32,7 +33,7 @@ export class gameObject{
         if(this.tags.includes('moving')){
             this.physics.update(deltaTime);
 
-            //COLLISION CHECK BEFORE THIS LINE -----------------------------------------
+            //NOTE: Do collision check before updateWorldIndex()
             this.updateWorldIndex();
         }
 
@@ -66,6 +67,7 @@ export class gameObject{
     }
     updateWorldIndex(){
         //This updates objects current position to collision check array (game.physicsObjects)
+
         if(this.game.locationToIndex(this.worldLocation) != this.worldIndex){
             //remove from old index
             this.game.removePhysicsObject(this, this.worldIndex);
@@ -78,6 +80,8 @@ export class gameObject{
 
 
     newAnim(animObject){
+        //add new animations to animHandler
+        
         if(this.animHandler){
             //if this is first animation, set it as current animation
             if(!this.animHandler.animcount){

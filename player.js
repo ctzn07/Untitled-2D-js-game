@@ -22,19 +22,19 @@ export class Player extends gameObject{
          if(this.input.keys.includes('w')){this.inputVec.y--;}
          if(this.input.keys.includes('s')){this.inputVec.y++;}
          this.inputVec.Nnormalize();
+
          //addmovement takes input vec, max speed/s and acceleration
          this.physics.addMovementInput(this.inputVec, 10, 2);
-         //console.log(this.inputVec);
-
     }
+
     draw(context, cameraPosition){
         super.draw(context, cameraPosition, this.animationFrame);
-        
     }
+
     createAnimations(){
-        
-        //TEMPLATE (these are required members, add more if needed for functionality)
         /*
+        TEMPLATE (these are required members, add more if needed for functionality)
+        
         this.newAnim(Object.create({
             animation: '', 
             frame: [], 
@@ -46,8 +46,8 @@ export class Player extends gameObject{
             }, 
             exitcondition: function(){return false;}
         */
+        //NOTE: update and exitcondition can only use references from inside the object
 
-        //update and exitcondition can only use references from inside the object!
         this.newAnim(Object.create({
             animation: 'walkright', 
             frame: [0,1,2,3], 
@@ -83,20 +83,3 @@ export class Player extends gameObject{
         }));
     }
 }
-
-/*
-if(true){
-    let index = this.game.locToIndex(this.worldLocation);
-    let loc = this.game.indexToLocation(index);
-    
-    context.rect((loc.x+this.physics.bBox.min.x)-(this.game.cameraPosition.x-this.game.width/2),
-                (loc.y+this.physics.bBox.min.y)-(this.game.cameraPosition.y-this.game.height/2),
-                this.spriteSize.x, this.spriteSize.y);
-                context.strokeStyle = 'blue';
-
-                context.font = '12px Verdana';
-                context.fillText(loc, 
-                loc.x-(this.game.cameraPosition.x-this.game.width/2)-65, 
-                loc.y-(this.game.cameraPosition.y-this.game.height/2)+32);
-                context.fillStyle = "#1f1f1f";
-                context.stroke();*/

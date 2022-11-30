@@ -1,4 +1,3 @@
-import { gameObject } from './gameObject.js';
 import{Vec} from './vector.js';
 
 export class Physics{
@@ -21,6 +20,8 @@ export class Physics{
         }
     }
     addMovementInput(inputVector, Acceleration, MaxSpeed){
+        //converts input vector and acceleration to velocity value
+
         //velocity = (input*maxspeed*acceleration - velocity*acceleration)*deltatime+velocity
         //aint this line a mouthful, and probably causes absurd amount of garbage collection
         this.velocity.Nplus((inputVector.multiplyValue(Acceleration*MaxSpeed).minus(this.velocity.multiplyValue(Acceleration))).multiplyValue(this.parent.game.deltaTime));
@@ -58,8 +59,8 @@ export class Physics{
     }
 
 
-    AABBCheck(){
-        let otherobj = this.parent.game.physicsObjects[this.parent.game.locationToIndex(location)];
+    AABBCheck(otherobj){
+        //AABB collision check against other object
         
         if(!otherobj){return false;}    //no object in location -> no collision
 
@@ -73,7 +74,6 @@ export class Physics{
             
             if(this.bBox.max.y+this.parent.worldLocation.y < otherobj.physics.bBox.min.y + otherobj.worldLocation.y ||
             this.bBox.min.y+this.parent.worldLocation.y > otherobj.physics.bBox.max.y + otherobj.worldLocation.y){return false;}
-            
             
             // No separating axis found, therefor there is at least one overlapping axis
             return true;
