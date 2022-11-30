@@ -21,32 +21,38 @@ window.addEventListener('load', function(){
             this.level = new Level(this, testlevel, testlevel_collision);
             this.deltaTime = 0;
             this.timeOld = Date.now();
-            this.cameraPosition = new Vec(250,250);
+            this.cameraPosition = new Vec(0,0);
             this.worldTileSize = new Vec(32, 32); //should this be square root of 1024(map size)?
             this.worldSize = new Vec(this.level.mapSprite.width, this.level.mapSprite.height);
 
             //since constructor runs on creation, use it to create all the relevant classes as well
             this.gameObjects = [];  //list of all gameobjects
-            this.physicsObjects = []; //list of all objects with collision
+            this.physicsObjects = [];  //list of all physicsobjects
+ 
+            /*
+            Object.create({
+                subItems: [], 
+                add: function(obj){this.subItems.push(obj);}, 
+                remove: function(obj){this.subItems.splice(this.subItems.indexOf(obj), 1);}
+            });
+            */
 
+            
 
             //param list: game, spawn position, spritesheet ref, spritesheet size
             this.player = new Player(this, new Vec(100,100), player, new Vec(4,2));
-            //add to gameObjects list
-            this.gameObjects.push(this.player);
-            
-            
-            
-            //COLLISION DEBUG BOX
-            
-            
+            this.blocker = new MapTile(this, new Vec(155,155), testblock, new Vec(1,1));
+            this.blocker = new MapTile(this, new Vec(150,150), testblock, new Vec(1,1));
+            this.blocker = new MapTile(this, new Vec(145,145), testblock, new Vec(1,1));
             //JavaScript automatically creates references to all elements with IDs into the global namespace, using it's ID as a variable name, see index.html to see where the player variable comes from
             
         }
         update(deltaTime){
             //all updated math goes here
-            //console.log(this.player.physics.penetrationCheck(this.blocker));
+            //console.log(this.physicsObjects);
+            //update camera position and speed
             this.cameraPosition = this.cameraPosition.lerp(this.player.worldLocation, 0.05);
+            
             //update deltaTime
             this.deltaTime = (Date.now() - this.timeOld)/1000;
             this.timeOld = Date.now()
@@ -55,25 +61,19 @@ window.addEventListener('load', function(){
             this.gameObjects.forEach(gameObject => {
                 gameObject.update(this.deltaTime);
             });
-
-            /*this.gameObjects.forEach(a => {
-                this.gameObjects.forEach(b =>{
-                    if(a && b)console.log(a.physics.collisionCheck(b));
-                })
-            });*/
-
-            
+  
 
         }
         draw(context, cameraPosition){
+            //draw level as bottom layer
             this.level.draw(context);
             //run draw() on all gameobjects
             this.gameObjects.forEach(gameObject => {
-                if(gameObject){
-                    gameObject.draw(context, this.cameraPosition);
-
-                }
+                if(gameObject){gameObject.draw(context, this.cameraPosition);}
             });
+            
+            
+            
         }
 
         //Converting 2D co-ordinates into 1D index
@@ -83,11 +83,11 @@ window.addEventListener('load', function(){
         //y = index / width;
         //x = index % width;
 
-        locToIndex(loc){
+        locationToIndex(location){
             //returns 1D index value of world location with accuracy of worldTileSize
             let arrWidth = Math.floor((this.worldSize.x-this.level.topleft.x)/this.worldTileSize.x);
-            let thisY = Math.round((loc.y-this.level.topleft.y)/this.worldTileSize.y);
-            let thisX = Math.round((loc.x-this.level.topleft.x)/this.worldTileSize.x);
+            let thisY = Math.round((location.y-this.level.topleft.y)/this.worldTileSize.y);
+            let thisX = Math.round((location.x-this.level.topleft.x)/this.worldTileSize.x);
             
             return thisY * arrWidth + thisX;
         }
@@ -97,10 +97,63 @@ window.addEventListener('load', function(){
             
             return new Vec(index%arrWidth, Math.floor(index/arrWidth)).multiply(this.worldTileSize).plus(this.level.topleft);
         }
-        getContext(){
-            //returns canvas context
-            return ctx;
+
+        trace(location){
+            //checks if there are objects in particular location
+            let result = {
+                TraceLocIndex: -1,
+                TraceLoc: new Vec(0,0),
+                Objects: [],
+                HitResult: false,
+            }
+            result.TraceLocIndex = this.locationToIndex(location);
+            result.TraceLoc = this.indexToLocation(result.TraceLocIndex);
+            result.Objects = this.physicsObjects[result.TraceLocIndex,[]];
+            result.HitResult = Boolean(result.Objects);
+            
+            if(this.drawDebug()){
+                this.drawDebugBox(result.TraceLoc, this.worldTileSize.minusValue(4), (result.HitResult ? '#ff7700' : '#3b3b3b'));
+            }
+    
+            return result;
         }
+
+        addPhysicsObject(gameobject, index){
+            //see if world index already has object to hold all the objects
+            if(!this.physicsObjects[index]){
+                //add new subItems array to world index
+                this.physicsObjects[index] = Object.create({
+                    subItems: [], 
+                    add: function(obj){this.subItems.push(obj);}, 
+                    remove: function(obj){this.subItems.splice(this.subItems.indexOf(obj), 1);}
+            });}
+
+            //add gameobject to subItems array
+            this.physicsObjects[index].add(gameobject);
+        }
+
+        removePhysicsObject(gameobject, index){
+            //check is index above within reading range
+            if(index+1)this.physicsObjects[index].remove(gameobject);
+        }
+
+        drawDebugBox(location, size, color = 'red'){
+                //draw debug box at given location and size
+                ctx.beginPath();
+                ctx.lineWidth = '2';
+                ctx.strokeStyle = color;
+                let gameSizeHalf = new Vec(this.width/2, this.height/2);
+                ctx.rect((location.x-size.x/2)-(this.cameraPosition.x-gameSizeHalf.x), (location.y-size.y/2)-(this.cameraPosition.y-gameSizeHalf.y), size.x, size.y);
+                ctx.stroke(); 
+        }
+        
+        drawDebugText(location, message, color = 'black'){
+            //draw debug text at location
+            ctx.font = '12px Verdana';
+            ctx.fillStyle = color;
+            ctx.fillText(message, location.x-(this.cameraPosition.x-this.width/2), location.y-(this.cameraPosition.y-this.height/2));
+        }
+
         drawDebug(){
             return DrawCollisionDebug;
         }
@@ -113,11 +166,13 @@ window.addEventListener('load', function(){
 
     function animate(){
         ctx.clearRect(0,0,canvas.width, canvas.height);
-        //call update on gameobject
-        game.update();
+        
+        
         //call game object to run draw, using ctx as context
         game.draw(ctx);
-
+        //call update on gameobject
+        game.update();
+        //understandably this draws "previous" frame, but debug draws require draw before update
         requestAnimationFrame(animate);
     }
     animate();
