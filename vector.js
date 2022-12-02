@@ -17,6 +17,8 @@ export class Vec{
     zero(){this.x = 0, this.y = 0;}
     toString(){return `Vec{x: ${this.x}, y: ${this.y}}`;}
     floor(){return new Vec(Math.floor(this.x), Math.floor(this.y));}
+    round(){return new Vec(Math.round(this.x), Math.round(this.y));}
+    ceil(){return new Vec(Math.ceil(this.x), Math.ceil(this.y));}
     //lerp(startVec, endVec, amt){return (1-amt)*start+amt*end;}
     lerp(otherVec, amt){return this.multiplyValue(1-amt).plus(otherVec.multiplyValue(amt));}
     //no return functions with N-prefix

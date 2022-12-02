@@ -18,11 +18,13 @@ window.addEventListener('load', function(){
         constructor(width, height){
             this.width = width;
             this.height = height;
-            this.level = new Level(this, testlevel, testlevel_collision);
+            this.level = new Level(this, testlevel, testlevel_collision); 
+            // ISSUE: level does not center to itself around 0,0 coordinates, change canvas size to check
             this.deltaTime = 0;
             this.timeOld = Date.now();
             this.cameraPosition = new Vec(0,0);
-            this.worldTileSize = new Vec(32, 32); //should this be square root of 1024(map size)?
+            this.cellSize = new Vec(32, 32); //size of the cell used for physicsObjects array
+
             this.worldSize = new Vec(this.level.mapSprite.width, this.level.mapSprite.height);
 
             //since constructor runs on creation, use it to create all the relevant classes as well
@@ -80,19 +82,19 @@ window.addEventListener('load', function(){
         //x = index % width;
 
         locationToIndex(location){
-            //returns 1D index value of world location with accuracy of worldTileSize
+            //returns 1D index value of world location with accuracy of cellSize
             
-            let arrWidth = Math.floor((this.worldSize.x-this.level.topleft.x)/this.worldTileSize.x);
-            let thisY = Math.round((location.y-this.level.topleft.y)/this.worldTileSize.y);
-            let thisX = Math.round((location.x-this.level.topleft.x)/this.worldTileSize.x);
+            let arrWidth = Math.floor((this.worldSize.x-this.level.topleft.x)/this.cellSize.x);
+            let thisY = Math.round((location.y-this.level.topleft.y)/this.cellSize.y);
+            let thisX = Math.round((location.x-this.level.topleft.x)/this.cellSize.x);
 
             return thisY * arrWidth + thisX;
         }
         indexToLocation(index){
-            //returns 2D world coordinate from 1D index value with accuracy of worldTileSize
-            let arrWidth = Math.round((this.worldSize.x-this.level.topleft.x)/this.worldTileSize.x);
+            //returns 2D world coordinate from 1D index value with accuracy of cellSize
+            let arrWidth = Math.round((this.worldSize.x-this.level.topleft.x)/this.cellSize.x);
             
-            return new Vec(index%arrWidth, Math.floor(index/arrWidth)).multiply(this.worldTileSize).plus(this.level.topleft);
+            return new Vec(index%arrWidth, Math.floor(index/arrWidth)).multiply(this.cellSize).plus(this.level.topleft);
         }
 
         trace(location){
@@ -112,7 +114,7 @@ window.addEventListener('load', function(){
             
             if(this.drawDebug()){
                 //draw rectangle at location, gray for HitResult false, orange for true
-                this.drawDebugBox(result.TraceLoc, this.worldTileSize.minusValue(4), (result.HitResult ? '#ff7700' : '#3b3b3b'));
+                this.drawDebugBox(result.TraceLoc, this.cellSize.minusValue(4), (result.HitResult ? '#ff7700' : '#3b3b3b'));
             }
     
             return result;
@@ -126,8 +128,9 @@ window.addEventListener('load', function(){
                 //add new subItems array to world index
                 this.physicsObjects[index] = Object.create({
                     subItems: [], 
-                    add: function(obj){this.subItems.push(obj);}, 
-                    remove: function(obj){this.subItems.splice(this.subItems.indexOf(obj), 1);}
+                    add: function(obj){
+                        if(!this.subItems.includes(obj)){this.subItems.push(obj);}}, 
+                    remove: function(obj){if(this.subItems.includes(obj)){this.subItems.splice(this.subItems.indexOf(obj), 1);}}
             });}
 
             //add gameobject to subItems array

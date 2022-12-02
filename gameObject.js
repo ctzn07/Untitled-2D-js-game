@@ -19,10 +19,8 @@ export class gameObject{
         //physics
         this.tags = physicsTags;
         if(this.tags.includes('block')){
-            //add physics handler
+            //add physics handler for moving objects
             this.physics = new Physics(this);
-            //add to game instance physics array
-            this.updateWorldIndex();
         }
         //add to game instance gameObjects array for update() and draw() calls
         this.game.gameObjects.push(this);
@@ -33,8 +31,7 @@ export class gameObject{
         if(this.tags.includes('moving')){
             this.physics.update(deltaTime);
 
-            //NOTE: Do collision check before updateWorldIndex()
-            this.updateWorldIndex();
+            
         }
 
         //only update animations if there are any
@@ -65,23 +62,12 @@ export class gameObject{
 
         }
     }
-    updateWorldIndex(){
-        //This updates objects current position to collision check array (game.physicsObjects)
-
-        if(this.game.locationToIndex(this.worldLocation) != this.worldIndex){
-            //remove from old index
-            this.game.removePhysicsObject(this, this.worldIndex);
-            //get new index
-            this.worldIndex = this.game.locationToIndex(this.worldLocation);
-            //set to new index
-            this.game.addPhysicsObject(this, this.worldIndex);
-        }
-    }
+    
 
 
     newAnim(animObject){
         //add new animations to animHandler
-        
+
         if(this.animHandler){
             //if this is first animation, set it as current animation
             if(!this.animHandler.animcount){
