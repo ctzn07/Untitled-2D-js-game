@@ -38,69 +38,31 @@ export class Physics{
         this.velocity.Nplus(vec);
     }
 
-    initBoxArray(bBox, game){
-        //this generates the necessary size for worldIndex array
-        let min = bBox.min.divide(game.cellSize);
-        let max = bBox.max.divide(game.cellSize);
-        let array = [];
-        for(let x = bBox.min.divide(game.cellSize).x; x < bBox.max.divide(game.cellSize).x; x++){
-            for(let y = bBox.min.divide(game.cellSize).y; y < bBox.max.divide(game.cellSize).y; y++){
-                array.push(game.cellSize.multiply(new Vec(x, y)));
-            }
-        }
-        console.log(array);
-        return array;
-    }
-
     updateWorldIndex(game, parent){
-        //This updates objects current position to collision check array (game.physicsObjects)
-        /*
-        let collisionCorners = [
-            new Vec(this.bBox.min.x,this.bBox.max.y),
-            new Vec(this.bBox.max.x,this.bBox.max.y),
-            new Vec(this.bBox.max.x,this.bBox.min.y),
-            new Vec(this.bBox.min.x,this.bBox.min.y)
-        ];
-        */
-        //let min = this.bBox.min.divide(game.cellSize.divideValue(2)).floor();
-        //let max = this.bBox.max.divide(game.cellSize.divideValue(2)).ceil();
-        let testboxValue = 32*5;
-        
+        //generate locations that bounding box occupies in the world
+        /*      old debug stuff
+        let testboxValue = 32*2;
         let testbBox = { min: new Vec(0-testboxValue / 2, 0-testboxValue / 2),
                                 max: new Vec(testboxValue / 2, testboxValue / 2)}; 
-
-
-
-
-
-
-
-
-
-
-
         let length = game.cellSize.length()/testbBox.min.length();
-        //console.log(length)
-        
-        //console.log('new loop')
+        */
         let collisionCorners = [];
-        //console.log('new loop');
-        game.drawDebugBox(parent.worldLocation, testbBox.max.multiplyValue(2), 'green');
-        for(let x = (testbBox.min.x/game.cellSize.x); x <= (testbBox.max.x/game.cellSize.x); x++){
-                for(let y = testbBox.min.y/game.cellSize.y; y <= testbBox.max.x/game.cellSize.x; y++){
-                    //code here
-                    //console.log(x, y)
-                    
-                    collisionCorners.push(new Vec(x*length,y*length).multiply(testbBox.max));
-                }
-            
+        let length = game.cellSize.length()/this.bBox.min.length();
 
+        if(game.drawDebug()){
+            //draw debug box that shows cell occupation
+            //game.drawDebugBox(parent.worldLocation, this.bBox.max.multiplyValue(2), 'green');
         }
-        //console.log(collisionCorners);
 
-
-
-
+        for(let x = (this.bBox.min.x/game.cellSize.x); x <= (this.bBox.max.x/game.cellSize.x); x++){
+            //for each X coordinate, do Y loop
+                for(let y = this.bBox.min.y/game.cellSize.y; y <= this.bBox.max.x/game.cellSize.x; y++){
+                    //calculate how many bounding boxes fit into world cell
+                    //values end up +1 to each direction, so 1:1 size occupies at least 4 cells
+                    //(during corner intersection)
+                    collisionCorners.push(new Vec(x*length,y*length).multiply(this.bBox.max));
+                }
+        }
 
         collisionCorners.forEach((loc,b,c) => {
         //forEach arguments: copy of an array item, current loop index, the array(?reference?)
@@ -114,11 +76,10 @@ export class Physics{
 
             }
         })
-        //draw temporary debug
+        //Show worldIndex cells the parent is occupying
         this.worldIndex.forEach((a,b)=>{
             game.drawDebugBox(game.indexToLocation(a), game.cellSize.minusValue(4), 'grey');
         })
-        //console.log(game.physicsObjects[this.worldIndex[0]]);
     
     }
     
