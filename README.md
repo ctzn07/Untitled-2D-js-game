@@ -1,2 +1,2 @@
-# P_001
+# Untitled-2D-js-game
 js code training
