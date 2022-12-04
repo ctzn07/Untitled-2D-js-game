@@ -14,12 +14,12 @@ export class Physics{
     }
     update(deltaTime){
         {
-            this.collisionCheck(this.parent.game, this.parent.worldLocation);
+            this.collisionCheck(this.parent.game, this.parent);
             //apply velocity to world location
             this.parent.worldLocation.Nplus(this.velocity);
             //to prevent absurdly small calculations
             if(this.velocity.length()<0.001){this.velocity.zero()};
-
+            
 
             //NOTE: Do collision check before updateWorldIndex()
             this.updateWorldIndex(this.parent.game, this.parent);
@@ -76,45 +76,63 @@ export class Physics{
 
             }
         })
+        
         //Show worldIndex cells the parent is occupying
+        /*
         this.worldIndex.forEach((a,b)=>{
             game.drawDebugBox(game.indexToLocation(a), game.cellSize.minusValue(4), 'grey');
         })
-    
+        */
     }
     
 
-    collisionCheck(game, location){
-        let nearbyObjects = [];
-        let directions = [
-            game.cellSize.multiply(new Vec(1,0)),
-            game.cellSize.multiply(new Vec(-1,0)),
-            game.cellSize.multiply(new Vec(0,1)),
-            game.cellSize.multiply(new Vec(0,-1)),
-            game.cellSize.multiply(new Vec(1,1)),
-            game.cellSize.multiply(new Vec(1,-1)),
-            game.cellSize.multiply(new Vec(-1,-1)),
-            game.cellSize.multiply(new Vec(-1,1)),
-            game.cellSize.multiply(new Vec(0,0))
-        ];
+    collisionCheck(game, parent){
+        //Fetch objects from game.physicsObjects using this.worldIndex indexes
+        this.worldIndex.forEach(index =>{
+            //cycle through all nearby worldIndexes
+            game.physicsObjects[index].subItems.forEach(subObject => {
+                //fetch subItems from worldIndex
+                if(subObject != parent && this.AABBCheck(subObject)){
+                    //if AABB check returns true and the object isn't itself, calculate penetration
+                    let local = parent.worldLocation.minus(subObject.worldLocation)
+                    let box = this.bBox.max.multiplyValue(2)
+                    let ratio = local.divide(box)
+                    ratio.x = 1-Math.abs(ratio.x)
+                    ratio.y = 1-Math.abs(ratio.y)
+                    ratio.Nmultiply(box)
+                    ratio.Nmultiply(local.normalize())
+                    
+                    //smaller value between ratio X and Y is the dominant penetration direction
+                    let booli = Math.abs(ratio.x) < Math.abs(ratio.y)
+                    ratio.Nmultiply(new Vec(booli ? 1 : 0, booli ? 0 : 1))
+                    //bool ? output false : output true
 
-        directions.forEach(dir=>{
-            let newLoc = location.plus(dir);
-            //let trace = game.trace(newLoc);
-            })
-        
 
+                    parent.worldLocation.Nplus(ratio.multiplyValue(1))
+                    //NOTE: Math is garbage, fix this
+                }
+            });
+
+            
+        })
+    }
+    
+    AABBCheck(otherobj){
+        //check if any corner coordinate overlap
+        if(this.bBox.max.x+this.parent.worldLocation.x < otherobj.physics.bBox.min.x+otherobj.worldLocation.x || 
+            this.bBox.min.x+this.parent.worldLocation.x > otherobj.physics.bBox.max.x+otherobj.worldLocation.x)
+            {return false;}
+            
+            if(this.bBox.max.y+this.parent.worldLocation.y < otherobj.physics.bBox.min.y + otherobj.worldLocation.y ||
+            this.bBox.min.y+this.parent.worldLocation.y > otherobj.physics.bBox.max.y + otherobj.worldLocation.y){return false;}
+            return true;
+    }
+        //game.Trace()  return template
 
         //TraceLocIndex: -1,
         //TraceLoc: new Vec(0,0),
         //Objects: [],
         //HitResult: false,
-
-    }
-    
-
-
-    
     
     
     
@@ -141,6 +159,6 @@ export class Physics{
             this.bBox.min.y+this.parent.worldLocation.y > otherobj.physics.bBox.max.y + otherobj.worldLocation.y){return false;}
             
             // No separating axis found, therefor there is at least one overlapping axis
-            return true;
+            
     }*/
 }

@@ -7,7 +7,7 @@ export class gameObject{
     constructor(game, spawnPos, physicsTags =[], tilemap, tilemapSize = new Vec(0,0)){
         this.game = game;
         this.worldLocation = spawnPos;
-        this.worldIndex = -1;
+        //this.worldIndex = -1;
 
         //graphics
         this.sprite = tilemap;

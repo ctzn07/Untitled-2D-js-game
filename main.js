@@ -42,8 +42,8 @@ window.addEventListener('load', function(){
             //param list: game, spawn position, spritesheet ref, spritesheet size
             this.player = new Player(this, new Vec(100,100), player, new Vec(4,2));
             this.blocker = new MapTile(this, new Vec(155,155), testblock, new Vec(1,1));
-            this.blocker = new MapTile(this, new Vec(150,150), testblock, new Vec(1,1));
-            this.blocker = new MapTile(this, new Vec(145,145), testblock, new Vec(1,1));
+            //this.blocker = new MapTile(this, new Vec(150,150), testblock, new Vec(1,1));
+            //this.blocker = new MapTile(this, new Vec(145,145), testblock, new Vec(1,1));
             
         }
         update(deltaTime){
@@ -115,6 +115,7 @@ window.addEventListener('load', function(){
             if(this.drawDebug()){
                 //draw rectangle at location, gray for HitResult false, orange for true
                 this.drawDebugBox(result.TraceLoc, this.cellSize.minusValue(4), (result.HitResult ? '#ff7700' : '#3b3b3b'));
+                //bool ? output false : output true
             }
     
             return result;
