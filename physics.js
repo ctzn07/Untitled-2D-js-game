@@ -40,27 +40,19 @@ export class Physics{
 
     updateWorldIndex(game, parent){
         //generate locations that bounding box occupies in the world
-        /*      old debug stuff
-        let testboxValue = 32*2;
-        let testbBox = { min: new Vec(0-testboxValue / 2, 0-testboxValue / 2),
-                                max: new Vec(testboxValue / 2, testboxValue / 2)}; 
-        let length = game.cellSize.length()/testbBox.min.length();
-        */
+
         let collisionCorners = [];
-        let length = game.cellSize.length()/this.bBox.min.length();
+        //determine stepping size for measuring points, one for each corner by default(bbox size)
+        //however, there must be one point per world cell, so pick the smallest value
+        let stepping = new Vec(Math.min(this.bBox.max.x*2, game.cellSize.x), Math.min(this.bBox.max.y*2, game.cellSize.y))
 
-        if(game.drawDebug()){
-            //draw debug box that shows cell occupation
-            //game.drawDebugBox(parent.worldLocation, this.bBox.max.multiplyValue(2), 'green');
-        }
-
-        for(let x = (this.bBox.min.x/game.cellSize.x); x <= (this.bBox.max.x/game.cellSize.x); x++){
+        for(let x = this.bBox.min.x; x <= this.bBox.max.x; x +=stepping.x){
             //for each X coordinate, do Y loop
-                for(let y = this.bBox.min.y/game.cellSize.y; y <= this.bBox.max.x/game.cellSize.x; y++){
-                    //calculate how many bounding boxes fit into world cell
-                    //values end up +1 to each direction, so 1:1 size occupies at least 4 cells
-                    //(during corner intersection)
-                    collisionCorners.push(new Vec(x*length,y*length).multiply(this.bBox.max));
+                for(let y = this.bBox.min.y; y <= this.bBox.max.x; y+=stepping.y){
+                    //loop between min xy and max xy, given stepping size
+                    collisionCorners.push(new Vec(x,y))
+                    //draw debug for corners
+                    //game.drawDebugBox(parent.worldLocation.plus(new Vec(x,y)), new Vec(2,2), 'black')
                 }
         }
 
@@ -76,13 +68,6 @@ export class Physics{
 
             }
         })
-        
-        //Show worldIndex cells the parent is occupying
-        /*
-        this.worldIndex.forEach((a,b)=>{
-            game.drawDebugBox(game.indexToLocation(a), game.cellSize.minusValue(4), 'grey');
-        })
-        */
     }
     
 
@@ -90,33 +75,50 @@ export class Physics{
         //Fetch objects from game.physicsObjects using this.worldIndex indexes
         this.worldIndex.forEach(index =>{
             //cycle through all nearby worldIndexes
-            game.physicsObjects[index].subItems.forEach(subObject => {
+            game.physicsObjects[index].subItems.forEach(otherobj => {
                 //fetch subItems from worldIndex
-                if(subObject != parent && this.AABBCheck(subObject)){
+                if(otherobj != parent /*&& this.AABBCheck(otherobj)*/){
                     //if AABB check returns true and the object isn't itself, calculate penetration
-                    let local = parent.worldLocation.minus(subObject.worldLocation)
-                    let box = this.bBox.max.multiplyValue(2)
-                    let ratio = local.divide(box)
-                    ratio.x = 1-Math.abs(ratio.x)
-                    ratio.y = 1-Math.abs(ratio.y)
-                    ratio.Nmultiply(box)
-                    ratio.Nmultiply(local.normalize())
+                    let g1 = {
+                        box: parent.physics.bBox,
+                        min: parent.physics.bBox.min,
+                        max: parent.physics.bBox.max,
+                        loc : parent.worldLocation
+                    }
+                    let g2 ={
+                        box: otherobj.physics.bBox,
+                        min: otherobj.physics.bBox.min,
+                        max: otherobj.physics.bBox.max,
+                        loc: otherobj.worldLocation
+                    }
+                    let vec = g2.loc.minus(g1.loc)
+                    vec.Nminus(this.boxClamp(g2.box, vec))
                     
-                    //smaller value between ratio X and Y is the dominant penetration direction
-                    let booli = Math.abs(ratio.x) < Math.abs(ratio.y)
-                    ratio.Nmultiply(new Vec(booli ? 1 : 0, booli ? 0 : 1))
-                    //bool ? output false : output true
+                    if(vec.length()<g1.box.max.length()){
+                    
+                        this.velocity.Nminus(vec.normalize().multiplyValue(this.velocity.dot(vec.normalize())))
+                        parent.worldLocation.Nplus(vec.normalize().negate().multiplyValue(game.deltaTime))
+                        
+                    }
+                    
 
-
-                    parent.worldLocation.Nplus(ratio.multiplyValue(1))
-                    //NOTE: Math is garbage, fix this
+                    game.drawDebugLine(g1.loc, g1.loc.plus(vec), 'black')
+                    
                 }
             });
 
             
         })
     }
-    
+    getDominantAxis(vec){
+        if(Math.abs(vec.x)>Math.abs(vec.y))return vec.multiply(new Vec(1,0))
+        return vec.multiply(new Vec(0,1))
+    }
+    boxClamp(box, vector){
+        //let x = (vector.x < bbox.min.x) ? bbox.min.x : (vector.x > bbox.max.x) ? bbox.max.x : vector.x
+        //let y = (vector.y < bbox.min.y) ? bbox.min.y : (vector.y > bbox.max.y) ? bbox.max.y : vector.y
+        return new Vec((vector.x < box.min.x) ? box.min.x : (vector.x > box.max.x) ? box.max.x : vector.x, (vector.y < box.min.y) ? box.min.y : (vector.y > box.max.y) ? box.max.y : vector.y)
+    }
     AABBCheck(otherobj){
         //check if any corner coordinate overlap
         if(this.bBox.max.x+this.parent.worldLocation.x < otherobj.physics.bBox.min.x+otherobj.worldLocation.x || 
@@ -127,6 +129,14 @@ export class Physics{
             this.bBox.min.y+this.parent.worldLocation.y > otherobj.physics.bBox.max.y + otherobj.worldLocation.y){return false;}
             return true;
     }
+    AABBValue(g1, g2){
+        let x = (g1.physics.bBox.max.x + g1.worldLocation.x) - (g2.physics.bBox.min.x+g2.worldLocation.x)
+        let y = (g1.physics.bBox.max.y + g1.worldLocation.y) - (g2.physics.bBox.min.y+g2.worldLocation.y)
+        return x, y
+    }
+
+
+
         //game.Trace()  return template
 
         //TraceLocIndex: -1,

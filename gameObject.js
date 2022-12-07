@@ -57,7 +57,7 @@ export class gameObject{
             //if DrawCollisionDebug = true, Draw collision boxes
             if(this.game.drawDebug()){
                 this.game.drawDebugBox(this.worldLocation, this.spriteSize, 'red');
-                this.game.drawDebugText(this.worldLocation, this.worldLocation.floor(), 'black');
+                this.game.drawDebugText(this.worldLocation.minusValue(25), [this.worldLocation.floor().x, this.worldLocation.floor().y], 'black');
             }
 
         }

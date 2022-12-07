@@ -19,6 +19,9 @@ export class Vec{
     floor(){return new Vec(Math.floor(this.x), Math.floor(this.y));}
     round(){return new Vec(Math.round(this.x), Math.round(this.y));}
     ceil(){return new Vec(Math.ceil(this.x), Math.ceil(this.y));}
+    dot(otherVec){return this.x*otherVec.x+this.y*otherVec.y;}
+    sign(){return new Vec(Math.sign(this.x), Math.sign(this.y));}
+    negate(){return new Vec(this.x*-1, this.y*-1);}
     //lerp(startVec, endVec, amt){return (1-amt)*start+amt*end;}
     lerp(otherVec, amt){return this.multiplyValue(1-amt).plus(otherVec.multiplyValue(amt));}
     //no return functions with N-prefix

@@ -23,7 +23,7 @@ window.addEventListener('load', function(){
             this.deltaTime = 0;
             this.timeOld = Date.now();
             this.cameraPosition = new Vec(0,0);
-            this.cellSize = new Vec(32, 32); //size of the cell used for physicsObjects array
+            this.cellSize = new Vec(128, 128); //size of the cell used for physicsObjects array
 
             this.worldSize = new Vec(this.level.mapSprite.width, this.level.mapSprite.height);
 
@@ -40,9 +40,9 @@ window.addEventListener('load', function(){
             */
 
             //param list: game, spawn position, spritesheet ref, spritesheet size
-            this.player = new Player(this, new Vec(100,100), player, new Vec(4,2));
-            this.blocker = new MapTile(this, new Vec(155,155), testblock, new Vec(1,1));
-            //this.blocker = new MapTile(this, new Vec(150,150), testblock, new Vec(1,1));
+            this.player = new Player(this, new Vec(100,50), player, new Vec(4,2));
+            this.blocker = new MapTile(this, new Vec(100,200), testblock, new Vec(1,1));
+            this.blocker = new MapTile(this, new Vec(300,50), testblock3, new Vec(1,1));
             //this.blocker = new MapTile(this, new Vec(145,145), testblock, new Vec(1,1));
             
         }
@@ -60,6 +60,11 @@ window.addEventListener('load', function(){
             this.gameObjects.forEach(gameObject => {
                 gameObject.update(this.deltaTime);
             });
+
+            //DRAW PHYSICS OBJECT CELL DEBUG
+            this.physicsObjects.forEach((a,b,c) =>{
+                this.drawDebugBox(this.indexToLocation(b), this.cellSize, 'gray')
+            })
 
         }
         draw(context, cameraPosition){
@@ -162,6 +167,13 @@ window.addEventListener('load', function(){
             ctx.font = '12px Verdana';
             ctx.fillStyle = color;
             ctx.fillText(message, location.x-(this.cameraPosition.x-this.width/2), location.y-(this.cameraPosition.y-this.height/2));
+        }
+        drawDebugLine(from, to, color = 'blue'){
+            ctx.beginPath();
+            ctx.strokeStyle = color;
+            ctx.moveTo(from.x-(this.cameraPosition.x-this.width/2), from.y-(this.cameraPosition.y-this.height/2));
+            ctx.lineTo(to.x-(this.cameraPosition.x-this.width/2), to.y-(this.cameraPosition.y-this.height/2));
+            ctx.stroke();
         }
 
         drawDebug(){
