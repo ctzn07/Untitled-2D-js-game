@@ -2,27 +2,28 @@ import{Vec} from './vector.js';
 
 export class Physics{
     constructor(gameObject){
-        this.parent = gameObject;
+        this.parent = gameObject
         //bounding box size
         this.bBox = { min: new Vec(0-gameObject.spriteSize.x / 2, 0-gameObject.spriteSize.y / 2),
                             max: new Vec(gameObject.spriteSize.x / 2, gameObject.spriteSize.y / 2)}; 
-        this.velocity = new Vec(0,0);
+        this.velocity = new Vec(0,0)
 
         //add to game instance physics array
-        this.worldIndex = [];
-        this.updateWorldIndex(this.parent.game, this.parent);
+        this.worldIndex = []
+        this.updateWorldIndex(this.parent.game, this.parent)
     }
     update(deltaTime){
         {
-            this.collisionCheck(this.parent.game, this.parent);
+            
+            this.collisionCheck(this.parent.game, this.parent)
             //apply velocity to world location
-            this.parent.worldLocation.Nplus(this.velocity);
+            this.parent.worldLocation.Nplus(this.velocity)
             //to prevent absurdly small calculations
-            if(this.velocity.length()<0.001){this.velocity.zero()};
+            if(this.velocity.length()<0.001){this.velocity.zero()}
             
 
             //NOTE: Do collision check before updateWorldIndex()
-            this.updateWorldIndex(this.parent.game, this.parent);
+            this.updateWorldIndex(this.parent.game, this.parent)
 
         }
     }
@@ -31,11 +32,11 @@ export class Physics{
 
         //velocity = (input*maxspeed*acceleration - velocity*acceleration)*deltatime+velocity
         //aint this line a mouthful, and probably causes absurd amount of garbage collection
-        this.velocity.Nplus((inputVector.multiplyValue(Acceleration*MaxSpeed).minus(this.velocity.multiplyValue(Acceleration))).multiplyValue(this.parent.game.deltaTime));
+        this.velocity.Nplus((inputVector.multiplyValue(Acceleration*MaxSpeed).minus(this.velocity.multiplyValue(Acceleration))).multiplyValue(this.parent.game.deltaTime))
 
     }
     addImpulse(vec){
-        this.velocity.Nplus(vec);
+        this.velocity.Nplus(vec)
     }
 
     updateWorldIndex(game, parent){
@@ -60,11 +61,11 @@ export class Physics{
         //forEach arguments: copy of an array item, current loop index, the array(?reference?)
         if(game.locationToIndex(parent.worldLocation.plus(loc)) != this.worldIndex[b]){
             //remove from old index
-            game.removePhysicsObject(parent, this.worldIndex[b]);
+            game.removePhysicsObject(parent, this.worldIndex[b])
             //get new index
-            this.worldIndex[b] = game.locationToIndex(parent.worldLocation.plus(loc));
+            this.worldIndex[b] = game.locationToIndex(parent.worldLocation.plus(loc))
             //set to new index
-            game.addPhysicsObject(parent, this.worldIndex[b]);
+            game.addPhysicsObject(parent, this.worldIndex[b])
 
             }
         })
@@ -77,7 +78,7 @@ export class Physics{
             //cycle through all nearby worldIndexes
             game.physicsObjects[index].subItems.forEach(otherobj => {
                 //fetch subItems from worldIndex
-                if(otherobj != parent /*&& this.AABBCheck(otherobj)*/){
+                if(otherobj != parent && this.AABBCheck(otherobj)){
                     //if AABB check returns true and the object isn't itself, calculate penetration
                     let g1 = {
                         box: parent.physics.bBox,
@@ -93,16 +94,25 @@ export class Physics{
                     }
                     let vec = g2.loc.minus(g1.loc)
                     vec.Nminus(this.boxClamp(g2.box, vec))
+                    //vec.Nplus(this.boxClamp(g1.box, vec))
                     
                     if(vec.length()<g1.box.max.length()){
-                    
-                        this.velocity.Nminus(vec.normalize().multiplyValue(this.velocity.dot(vec.normalize())))
-                        parent.worldLocation.Nplus(vec.normalize().negate().multiplyValue(game.deltaTime))
+                        let dot = this.velocity.dot(vec.normalize()) 
+                        //reduce any velocity towards the blocking object, but only if dot value is above 0(no negative reduction)
+                        this.velocity.Nminus(vec.normalize().multiplyValue((dot > 0 ? dot : 0)))
+                        //draw debug line for collision vector
+                        //game.drawDebugLine(g1.loc, g1.loc.plus(vec), 'black')
+
+                        //backup incase there is need for manual de-penetration
+                        //parent.worldLocation.Nplus(vec.normalize().negate().multiplyValue(game.deltaTime))
+
+                        //NOTE: Need to add Impulse resolution when colliding with movable objects
+                        //(transferring own velocity to collided object)
                         
                     }
                     
 
-                    game.drawDebugLine(g1.loc, g1.loc.plus(vec), 'black')
+                    
                     
                 }
             });
@@ -129,13 +139,6 @@ export class Physics{
             this.bBox.min.y+this.parent.worldLocation.y > otherobj.physics.bBox.max.y + otherobj.worldLocation.y){return false;}
             return true;
     }
-    AABBValue(g1, g2){
-        let x = (g1.physics.bBox.max.x + g1.worldLocation.x) - (g2.physics.bBox.min.x+g2.worldLocation.x)
-        let y = (g1.physics.bBox.max.y + g1.worldLocation.y) - (g2.physics.bBox.min.y+g2.worldLocation.y)
-        return x, y
-    }
-
-
 
         //game.Trace()  return template
 
