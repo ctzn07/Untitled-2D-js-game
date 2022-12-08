@@ -107,32 +107,29 @@ export class Physics{
                         let depenX = vec.x - g1.box.max.x*Math.sign(vec.x) - g2.box.max.x*Math.sign(vec.x)
                         let depenY = vec.y - g1.box.max.y*Math.sign(vec.y) - g2.box.max.y*Math.sign(vec.y)
                         let penVec = new Vec(depenX, depenY)
+
                         //get the collision side of g2 where the penetration is measured
-                        penVec = this.sideClamp(g2.box, penVec)
+                        penVec = this.sideClamp(penVec)
 
                         //dot value vec is incorrect, it should be perpendicular to the collision side
                         //or pointing to neares g2 corner so that player would attempt to slide past it
                         let dot = vec.normalize().dot(this.velocity.normalize())
 
-                        dot =  dot > 0 ? dot : 0 //only accept above 0 dot values(but not abs)
-                        
-                        this.velocity = this.velocity.minus(this.velocity.multiplyValue(dot-game.deltaTime))
+                        //only accept above 0 dot values(but not abs)
+                        dot =  dot > 0 ? dot : 0 
+
+                        //do de-pentration
                         parent.worldLocation.Nplus(penVec)
 
-
                         if(otherobj.tags.includes('moving')){
-                            //figure this out
-                            
-                            
+                            //calculate force ratios by dividing object weights against each other
+                            //add opposite velocity impulses accordingly
                         }
-                        //reduce any velocity towards the blocking object, but only if dot value is above 0(no negative reduction)
+                        
                         if(otherobj.tags.includes('static')){
-                            
+                            //reduce any velocity towards the blocking object
+                            this.velocity = this.velocity.minus(this.velocity.multiplyValue(dot))
                         }
-                    
-
-                    
-                    
                 }
             });
 
@@ -141,15 +138,18 @@ export class Physics{
     }
 
     boxClamp(box, vec){
+        //really neat way to clamp localspace vector inside a rectange
+        
         //let x = (vector.x < bbox.min.x) ? bbox.min.x : (vector.x > bbox.max.x) ? bbox.max.x : vector.x
         //let y = (vector.y < bbox.min.y) ? bbox.min.y : (vector.y > bbox.max.y) ? bbox.max.y : vector.y
         return new Vec((vec.x < box.min.x) ? box.min.x : (vec.x > box.max.x) ? box.max.x : vec.x, (vec.y < box.min.y) ? box.min.y : (vec.y > box.max.y) ? box.max.y : vec.y)
     }
-    sideClamp(box, vec){
+    sideClamp(vec){
+        //am I dumb or is this reversed? it works tho...
         if(Math.abs(vec.x)>Math.abs(vec.y))return new Vec(0, vec.y)
         return new Vec(vec.x, 0)
-        
     }
+
     
 
 
