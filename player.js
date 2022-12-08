@@ -24,7 +24,7 @@ export class Player extends gameObject{
          this.inputVec.Nnormalize();
 
          //addmovement takes input vec, max speed/s and acceleration
-         this.physics.addMovementInput(this.inputVec, 10, 2);
+         this.physics.addMovementInput(this.inputVec, 25);
     }
 
     draw(context, cameraPosition){

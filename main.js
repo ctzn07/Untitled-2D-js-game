@@ -40,10 +40,10 @@ window.addEventListener('load', function(){
             */
 
             //param list: game, spawn position, spritesheet ref, spritesheet size
-            this.player = new Player(this, new Vec(100,50), player, new Vec(4,2));
-            this.blocker = new MapTile(this, new Vec(100,200), testblock, new Vec(1,1));
-            this.blocker = new MapTile(this, new Vec(300,50), testblock3, new Vec(1,1));
-            //this.blocker = new MapTile(this, new Vec(145,145), testblock, new Vec(1,1));
+            this.player = new Player(this, new Vec(-100,0), player, new Vec(4,2));
+            //this.blocker = new MapTile(this, new Vec(100,200), testblock, new Vec(1,1));
+            this.blocker = new MapTile(this, new Vec(0,0), testblock3, new Vec(1,1));
+            //this.blocker = new MapTile(this, new Vec(300,-50), testblock2, new Vec(1,1));
             
         }
         update(deltaTime){

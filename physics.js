@@ -7,6 +7,7 @@ export class Physics{
         this.bBox = { min: new Vec(0-gameObject.spriteSize.x / 2, 0-gameObject.spriteSize.y / 2),
                             max: new Vec(gameObject.spriteSize.x / 2, gameObject.spriteSize.y / 2)}; 
         this.velocity = new Vec(0,0)
+        this.weight = 5
 
         //add to game instance physics array
         this.worldIndex = []
@@ -15,9 +16,16 @@ export class Physics{
     update(deltaTime){
         {
             
-            this.collisionCheck(this.parent.game, this.parent)
+             //run collision check
+             this.collisionCheck(this.parent.game, this.parent)
+
+            
             //apply velocity to world location
             this.parent.worldLocation.Nplus(this.velocity)
+           
+            //apply drag
+            this.velocity.Nminus(this.velocity.multiplyValue(this.weight).multiplyValue(this.parent.game.deltaTime))
+            
             //to prevent absurdly small calculations
             if(this.velocity.length()<0.001){this.velocity.zero()}
             
@@ -27,12 +35,10 @@ export class Physics{
 
         }
     }
-    addMovementInput(inputVector, Acceleration, MaxSpeed){
+    addMovementInput(inputVector, MaxSpeed){
         //converts input to velocity value
 
-        //velocity = (input*maxspeed*acceleration - velocity*acceleration)*deltatime+velocity
-        //aint this line a mouthful, and probably causes absurd amount of garbage collection
-        this.velocity.Nplus((inputVector.multiplyValue(Acceleration*MaxSpeed).minus(this.velocity.multiplyValue(Acceleration))).multiplyValue(this.parent.game.deltaTime))
+        this.velocity.Nplus(inputVector.multiplyValue(MaxSpeed).multiplyValue(this.parent.game.deltaTime))
 
     }
     addImpulse(vec){
@@ -42,7 +48,7 @@ export class Physics{
     updateWorldIndex(game, parent){
         //generate locations that bounding box occupies in the world
 
-        let collisionCorners = [];
+        let collisionCorners = []
         //determine stepping size for measuring points, one for each corner by default(bbox size)
         //however, there must be one point per world cell, so pick the smallest value
         let stepping = new Vec(Math.min(this.bBox.max.x*2, game.cellSize.x), Math.min(this.bBox.max.y*2, game.cellSize.y))
@@ -78,38 +84,51 @@ export class Physics{
             //cycle through all nearby worldIndexes
             game.physicsObjects[index].subItems.forEach(otherobj => {
                 //fetch subItems from worldIndex
+                let g1 = {
+                    box: parent.physics.bBox,
+                    min: parent.physics.bBox.min,
+                    max: parent.physics.bBox.max,
+                    loc : parent.worldLocation
+                }
+                let g2 = {
+                    box: otherobj.physics.bBox,
+                    min: otherobj.physics.bBox.min,
+                    max: otherobj.physics.bBox.max,
+                    loc: otherobj.worldLocation
+                }
                 if(otherobj != parent && this.AABBCheck(otherobj)){
                     //if AABB check returns true and the object isn't itself, calculate penetration
-                    let g1 = {
-                        box: parent.physics.bBox,
-                        min: parent.physics.bBox.min,
-                        max: parent.physics.bBox.max,
-                        loc : parent.worldLocation
-                    }
-                    let g2 ={
-                        box: otherobj.physics.bBox,
-                        min: otherobj.physics.bBox.min,
-                        max: otherobj.physics.bBox.max,
-                        loc: otherobj.worldLocation
-                    }
-                    let vec = g2.loc.minus(g1.loc)
-                    vec.Nminus(this.boxClamp(g2.box, vec))
-                    //vec.Nplus(this.boxClamp(g1.box, vec))
-                    
-                    if(vec.length()<g1.box.max.length()){
-                        let dot = this.velocity.dot(vec.normalize()) 
-                        //reduce any velocity towards the blocking object, but only if dot value is above 0(no negative reduction)
-                        this.velocity.Nminus(vec.normalize().multiplyValue((dot > 0 ? dot : 0)))
-                        //draw debug line for collision vector
-                        //game.drawDebugLine(g1.loc, g1.loc.plus(vec), 'black')
-
-                        //backup incase there is need for manual de-penetration
-                        //parent.worldLocation.Nplus(vec.normalize().negate().multiplyValue(game.deltaTime))
-
-                        //NOTE: Need to add Impulse resolution when colliding with movable objects
-                        //(transferring own velocity to collided object)
+                        let vec = otherobj.worldLocation.minus(parent.worldLocation)
                         
-                    }
+                        
+                        //let depenX = vec.x - g1.box.max.x*Math.sign(vec.x) - g2.box.max.x*Math.sign(vec.x)
+                        //let depenY = vec.y - g1.box.max.y*Math.sign(vec.y) - g2.box.max.y*Math.sign(vec.y)
+                        
+                        let depenX = vec.x - g1.box.max.x*Math.sign(vec.x) - g2.box.max.x*Math.sign(vec.x)
+                        let depenY = vec.y - g1.box.max.y*Math.sign(vec.y) - g2.box.max.y*Math.sign(vec.y)
+                        let penVec = new Vec(depenX, depenY)
+                        //get the collision side of g2 where the penetration is measured
+                        penVec = this.sideClamp(g2.box, penVec)
+
+                        //dot value vec is incorrect, it should be perpendicular to the collision side
+                        //or pointing to neares g2 corner so that player would attempt to slide past it
+                        let dot = vec.normalize().dot(this.velocity.normalize())
+
+                        dot =  dot > 0 ? dot : 0 //only accept above 0 dot values(but not abs)
+                        
+                        this.velocity = this.velocity.minus(this.velocity.multiplyValue(dot-game.deltaTime))
+                        parent.worldLocation.Nplus(penVec)
+
+
+                        if(otherobj.tags.includes('moving')){
+                            //figure this out
+                            
+                            
+                        }
+                        //reduce any velocity towards the blocking object, but only if dot value is above 0(no negative reduction)
+                        if(otherobj.tags.includes('static')){
+                            
+                        }
                     
 
                     
@@ -120,15 +139,21 @@ export class Physics{
             
         })
     }
-    getDominantAxis(vec){
-        if(Math.abs(vec.x)>Math.abs(vec.y))return vec.multiply(new Vec(1,0))
-        return vec.multiply(new Vec(0,1))
-    }
-    boxClamp(box, vector){
+
+    boxClamp(box, vec){
         //let x = (vector.x < bbox.min.x) ? bbox.min.x : (vector.x > bbox.max.x) ? bbox.max.x : vector.x
         //let y = (vector.y < bbox.min.y) ? bbox.min.y : (vector.y > bbox.max.y) ? bbox.max.y : vector.y
-        return new Vec((vector.x < box.min.x) ? box.min.x : (vector.x > box.max.x) ? box.max.x : vector.x, (vector.y < box.min.y) ? box.min.y : (vector.y > box.max.y) ? box.max.y : vector.y)
+        return new Vec((vec.x < box.min.x) ? box.min.x : (vec.x > box.max.x) ? box.max.x : vec.x, (vec.y < box.min.y) ? box.min.y : (vec.y > box.max.y) ? box.max.y : vec.y)
     }
+    sideClamp(box, vec){
+        if(Math.abs(vec.x)>Math.abs(vec.y))return new Vec(0, vec.y)
+        return new Vec(vec.x, 0)
+        
+    }
+    
+
+
+
     AABBCheck(otherobj){
         //check if any corner coordinate overlap
         if(this.bBox.max.x+this.parent.worldLocation.x < otherobj.physics.bBox.min.x+otherobj.worldLocation.x || 
