@@ -62,9 +62,9 @@ window.addEventListener('load', function(){
             });
 
             //DRAW PHYSICS OBJECT CELL DEBUG
-            this.physicsObjects.forEach((a,b,c) =>{
+            /*this.physicsObjects.forEach((a,b,c) =>{
                 this.drawDebugBox(this.indexToLocation(b), this.cellSize, 'gray')
-            })
+            })*/
 
         }
         draw(context, cameraPosition){

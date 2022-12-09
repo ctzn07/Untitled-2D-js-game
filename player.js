@@ -10,6 +10,7 @@ export class Player extends gameObject{
         super(game, spawnPos, ['moving', 'block'], tilemap, tilemapSize);
         this.input = new InputHandler();
         this.inputVec = new Vec(0,0);
+        this.physics.weight = 15
         this.createAnimations();
     }
     update(deltaTime){
@@ -24,7 +25,7 @@ export class Player extends gameObject{
          this.inputVec.Nnormalize();
 
          //addmovement takes input vec, max speed/s and acceleration
-         this.physics.addMovementInput(this.inputVec, 25);
+         this.physics.addMovementInput(this.inputVec, 45);
     }
 
     draw(context, cameraPosition){

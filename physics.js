@@ -7,7 +7,7 @@ export class Physics{
         this.bBox = { min: new Vec(0-gameObject.spriteSize.x / 2, 0-gameObject.spriteSize.y / 2),
                             max: new Vec(gameObject.spriteSize.x / 2, gameObject.spriteSize.y / 2)}; 
         this.velocity = new Vec(0,0)
-        this.weight = 5
+        this.weight = 1
 
         //add to game instance physics array
         this.worldIndex = []
@@ -88,47 +88,54 @@ export class Physics{
                     box: parent.physics.bBox,
                     min: parent.physics.bBox.min,
                     max: parent.physics.bBox.max,
-                    loc : parent.worldLocation
+                    loc : parent.worldLocation,
+                    weight: parent.physics.weight
                 }
                 let g2 = {
                     box: otherobj.physics.bBox,
                     min: otherobj.physics.bBox.min,
                     max: otherobj.physics.bBox.max,
-                    loc: otherobj.worldLocation
+                    loc: otherobj.worldLocation,
+                    weight: otherobj.physics.weight
                 }
                 if(otherobj != parent && this.AABBCheck(otherobj)){
                     //if AABB check returns true and the object isn't itself, calculate penetration
+
+                        //localspace vector of the collision
                         let vec = otherobj.worldLocation.minus(parent.worldLocation)
                         
-                        
-                        //let depenX = vec.x - g1.box.max.x*Math.sign(vec.x) - g2.box.max.x*Math.sign(vec.x)
-                        //let depenY = vec.y - g1.box.max.y*Math.sign(vec.y) - g2.box.max.y*Math.sign(vec.y)
-                        
-                        let depenX = vec.x - g1.box.max.x*Math.sign(vec.x) - g2.box.max.x*Math.sign(vec.x)
-                        let depenY = vec.y - g1.box.max.y*Math.sign(vec.y) - g2.box.max.y*Math.sign(vec.y)
-                        let penVec = new Vec(depenX, depenY)
+                        let penVec = new Vec
+                        (vec.x - g1.box.max.x*Math.sign(vec.x) - g2.box.max.x*Math.sign(vec.x),
+                         vec.y - g1.box.max.y*Math.sign(vec.y) - g2.box.max.y*Math.sign(vec.y))
 
                         //get the collision side of g2 where the penetration is measured
-                        penVec = this.sideClamp(penVec)
+                        penVec = this.minSide(penVec)
+                        vec = this.maxSide(vec)
 
-                        //dot value vec is incorrect, it should be perpendicular to the collision side
-                        //or pointing to neares g2 corner so that player would attempt to slide past it
-                        let dot = vec.normalize().dot(this.velocity.normalize())
-
+                        //dot values to make sure depen and velocity reduction point away from the wall
+                        let dot = this.velocity.dot(vec.normalize())
+                        let pendot = this.velocity.normalize().dot(penVec.normalize())
+                        
+                        
                         //only accept above 0 dot values(but not abs)
-                        dot =  dot > 0 ? dot : 0 
+                        dot =  dot >= 0 ? dot : 0
+                        pendot = pendot < 0 ? 1 : 0
 
                         //do de-pentration
-                        parent.worldLocation.Nplus(penVec)
-
+                        parent.worldLocation.Nplus(penVec.multiplyValue(pendot))
+                        
                         if(otherobj.tags.includes('moving')){
                             //calculate force ratios by dividing object weights against each other
+                            let ratio = g1.weight > g2.weight ? g1.weight/g2.weight : 1-g2.weight/g1.weight
+                            console.log(ratio)
+                            
+                            
                             //add opposite velocity impulses accordingly
                         }
                         
                         if(otherobj.tags.includes('static')){
                             //reduce any velocity towards the blocking object
-                            this.velocity = this.velocity.minus(this.velocity.multiplyValue(dot))
+                            this.velocity.Nminus(vec.normalize().multiplyValue(dot))
                         }
                 }
             });
@@ -144,10 +151,15 @@ export class Physics{
         //let y = (vector.y < bbox.min.y) ? bbox.min.y : (vector.y > bbox.max.y) ? bbox.max.y : vector.y
         return new Vec((vec.x < box.min.x) ? box.min.x : (vec.x > box.max.x) ? box.max.x : vec.x, (vec.y < box.min.y) ? box.min.y : (vec.y > box.max.y) ? box.max.y : vec.y)
     }
-    sideClamp(vec){
-        //am I dumb or is this reversed? it works tho...
+    minSide(vec){
+        //returns smallest axis only
         if(Math.abs(vec.x)>Math.abs(vec.y))return new Vec(0, vec.y)
         return new Vec(vec.x, 0)
+    }
+    maxSide(vec){
+        //returns larger axis only
+        if(Math.abs(vec.x)>Math.abs(vec.y))return new Vec(vec.x, 0)
+        return new Vec(0, vec.y)
     }
 
     
