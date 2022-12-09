@@ -23,7 +23,7 @@ window.addEventListener('load', function(){
             this.deltaTime = 0;
             this.timeOld = Date.now();
             this.cameraPosition = new Vec(0,0);
-            this.cellSize = new Vec(128, 128); //size of the cell used for physicsObjects array
+            this.cellSize = new Vec(256,256); //size of the cell used for physicsObjects array
 
             this.worldSize = new Vec(this.level.mapSprite.width, this.level.mapSprite.height);
 
@@ -62,9 +62,9 @@ window.addEventListener('load', function(){
             });
 
             //DRAW PHYSICS OBJECT CELL DEBUG
-            /*this.physicsObjects.forEach((a,b,c) =>{
+            this.physicsObjects.forEach((a,b,c) =>{
                 this.drawDebugBox(this.indexToLocation(b), this.cellSize, 'gray')
-            })*/
+            })
 
         }
         draw(context, cameraPosition){
