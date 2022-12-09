@@ -49,17 +49,22 @@ export class Physics{
         //generate locations that bounding box occupies in the world
 
         let collisionCorners = []
+
         //determine stepping size for measuring points, one for each corner by default(bbox size)
         //however, there must be one point per world cell, so pick the smallest value
-        let stepping = new Vec(Math.min(this.bBox.max.x*2, game.cellSize.x), Math.min(this.bBox.max.y*2, game.cellSize.y))
+        //let stepping = new Vec(Math.min(this.bBox.max.x*2, game.cellSize.x), Math.min(this.bBox.max.y*2, game.cellSize.y))
+        let stepping = (new Vec(this.bBox.max.x, this.bBox.max.y))
 
         for(let x = this.bBox.min.x; x <= this.bBox.max.x; x +=stepping.x){
             //for each X coordinate, do Y loop
                 for(let y = this.bBox.min.y; y <= this.bBox.max.x; y+=stepping.y){
+
                     //loop between min xy and max xy, given stepping size
                     collisionCorners.push(new Vec(x,y))
+ 
+
                     //draw debug for corners
-                    //game.drawDebugBox(parent.worldLocation.plus(new Vec(x,y)), new Vec(2,2), 'black')
+                    game.drawDebugBox(parent.worldLocation.plus(new Vec(x,y)), new Vec(2,2), 'black')
                 }
         }
 
@@ -73,9 +78,15 @@ export class Physics{
             //set to new index
             game.addPhysicsObject(parent, this.worldIndex[b])
 
+            //BUG: later loop points are removing the object from indexes it still occupies
+            //FIX: re-organize when removals and additions happen
             }
         })
     }
+    
+
+
+
     
 
     collisionCheck(game, parent){
@@ -126,8 +137,14 @@ export class Physics{
                         
                         if(otherobj.tags.includes('moving')){
                             //calculate force ratios by dividing object weights against each other
-                            let ratio = g1.weight > g2.weight ? g1.weight/g2.weight : 1-g2.weight/g1.weight
-                            console.log(ratio)
+                            let pratio = g1.weight/(g1.weight+g2.weight)
+                            let oratio = 1-pratio
+                            
+                            this.velocity.Nminus(vec.normalize().multiplyValue(dot*oratio))
+                            otherobj.physics.velocity.Nplus(vec.normalize().multiplyValue(dot*pratio))
+                            
+
+                            
                             
                             
                             //add opposite velocity impulses accordingly
@@ -137,6 +154,7 @@ export class Physics{
                             //reduce any velocity towards the blocking object
                             this.velocity.Nminus(vec.normalize().multiplyValue(dot))
                         }
+                        
                 }
             });
 
