@@ -3,8 +3,8 @@ import{Vec} from './vector.js';
 
 export class MapTile extends gameObject{
     constructor(game, spawnPos, tilemap, tilemapSize){
-        super(game, spawnPos, ['moving', 'block'], tilemap, tilemapSize);
-        this.physics.weight = 5
+        super(game, spawnPos, ['static', 'block'], tilemap, tilemapSize);
+        this.physics.weight = 25
 
     }
     draw(context, cameraPosition){

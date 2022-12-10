@@ -6,7 +6,7 @@ import {gameObject} from './gameObject.js';
 
 
 //load event : JavaScript waits for all dependent resources such as stylesheets and images to be fully loaded and available before it runs
-window.addEventListener('load', function(){
+//window.addEventListener('load', function(){
     const canvas = document.getElementById('canvas1');
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled=false;
@@ -42,7 +42,7 @@ window.addEventListener('load', function(){
             //param list: game, spawn position, spritesheet ref, spritesheet size
             this.player = new Player(this, new Vec(-100,0), player, new Vec(4,2));
             //this.blocker = new MapTile(this, new Vec(100,200), testblock, new Vec(1,1));
-            this.blocker = new MapTile(this, new Vec(0,0), testblock3, new Vec(1,1));
+            //this.blocker = new MapTile(this, new Vec(0,0), testblock3, new Vec(1,1));
             //this.blocker = new MapTile(this, new Vec(300,-50), testblock2, new Vec(1,1));
             
         }
@@ -61,11 +61,6 @@ window.addEventListener('load', function(){
                 gameObject.update(this.deltaTime);
             });
 
-            //DRAW PHYSICS OBJECT CELL DEBUG
-            this.physicsObjects.forEach((a,b,c) =>{
-                this.drawDebugBox(this.indexToLocation(b), this.cellSize, 'gray')
-            })
-
         }
         draw(context, cameraPosition){
             //all graphics draws go here
@@ -79,28 +74,8 @@ window.addEventListener('load', function(){
             });
         }
 
-        //Converting 2D co-ordinates into 1D index
-        //y * width + x
 
-        //Converting 1D index into 2D co-ordinates
-        //y = index / width;
-        //x = index % width;
 
-        locationToIndex(location){
-            //returns 1D index value of world location with accuracy of cellSize
-            
-            let arrWidth = Math.floor((this.worldSize.x-this.level.topleft.x)/this.cellSize.x);
-            let thisY = Math.round((location.y-this.level.topleft.y)/this.cellSize.y);
-            let thisX = Math.round((location.x-this.level.topleft.x)/this.cellSize.x);
-
-            return thisY * arrWidth + thisX;
-        }
-        indexToLocation(index){
-            //returns 2D world coordinate from 1D index value with accuracy of cellSize
-            let arrWidth = Math.round((this.worldSize.x-this.level.topleft.x)/this.cellSize.x);
-            
-            return new Vec(index%arrWidth, Math.floor(index/arrWidth)).multiply(this.cellSize).plus(this.level.topleft);
-        }
 
         trace(location){
             //checks if there are objects in particular location
@@ -200,4 +175,4 @@ window.addEventListener('load', function(){
         requestAnimationFrame(animate);
     }
     animate();
-})
+//})

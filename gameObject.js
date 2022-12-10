@@ -4,34 +4,31 @@ import {Physics} from './physics.js';
 import {Animation} from './animation.js'
 
 export class gameObject{
-    constructor(game, spawnPos, physicsTags =[], tilemap, tilemapSize = new Vec(0,0)){
-        this.game = game;
-        this.worldLocation = spawnPos;
-        //this.worldIndex = -1;
+    constructor(game, spawnPos, physicsTags =[], tilemap, tilemapSize = new Vec(0,0), ){
+        this.game = game
+        this.worldLocation = spawnPos
 
         //graphics
-        this.sprite = tilemap;
-        this.spriteSize = new Vec(this.sprite.width, this.sprite.height).divide(tilemapSize);
-        this.animationFrame = 0;
+        this.sprite = tilemap
+        this.spriteSize = new Vec(this.sprite.width, this.sprite.height).divide(tilemapSize)
+        this.animationFrame = 0
         //only add animation handler if there's something to animate
-        if(tilemapSize.x > 1 || tilemapSize.y > 1)this.animHandler = new Animation(this);
+        if(tilemapSize.x > 1 || tilemapSize.y > 1)this.animHandler = new Animation(this)
 
         //physics
         this.tags = physicsTags;
         if(this.tags.includes('block')){
             //add physics handler for moving objects
-            this.physics = new Physics(this);
+            this.physics = new Physics(this)
         }
         //add to game instance gameObjects array for update() and draw() calls
-        this.game.gameObjects.push(this);
+        this.game.gameObjects.push(this)
         
     }
     update(deltaTime){
         //only update physics on moving objects
         if(this.tags.includes('moving')){
-            this.physics.update(deltaTime);
-
-            
+            this.physics.update(deltaTime)  
         }
 
         //only update animations if there are any
@@ -62,8 +59,6 @@ export class gameObject{
 
         }
     }
-    
-
 
     newAnim(animObject){
         //add new animations to animHandler

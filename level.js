@@ -1,4 +1,6 @@
-import{Vec} from './vector.js';
+import { Vec } from './vector.js';
+import { BlockingVolume } from './blockingvolume.js';
+import { gameObject } from './gameObject.js';
 
 export class Level{
     constructor(game, mapSprite, collisionSprite){
@@ -22,24 +24,24 @@ export class Level{
         //image file, sprite startpixel X, sprite startpixel Y, sprite size X, sprite size Y
         //image draw start X, image draw start Y, relative image draw end X, relative image draw end Y
     }
-    generateCollisions(sprite, size){
-        let maxX = Math.floor(sprite.width / size);
-        let maxY = Math.floor(sprite.height / size);
-        var img = this.collisionSprite;
-        var canvas = document.createElement('canvas');
-        var context = canvas.getContext("2d", { willReadFrequently: true });
-        
+    generateCollisions(sprite){
+
+        let img = this.collisionSprite;
+        let canvas = document.createElement('canvas');
+        let context = canvas.getContext("2d", { willReadFrequently: true });
+        let stepping = new Vec(32,32)
         context.clearRect(0,0,img.width, img.height);
         context.drawImage(img, 0, 0);
 
-        for (let x = 0; x < maxX; x++) {
-            for (let y = 0; y < maxY; y++){
-                //this loop will go through 0-31 on x and y axis
+        for (let x = 0; x < sprite.width; x += stepping.x) {
+            for (let y = 0; y < sprite.height; y += stepping.y){
+                //this loop will check pixel data 
                 //getImageData.data returns [r, g, b, a]
-                const b = context.getImageData(x*size, y*size, 1, 1).data[0];
+                const b = context.getImageData(x, y, 1, 1).data[0];
                 //if .data[0] is above 0, add collision box
                 if(b>0){
-                    //
+                    new BlockingVolume(this.game, new Vec(x, y), ['static', 'block'], stepping)
+                    
                 }
             }
         }

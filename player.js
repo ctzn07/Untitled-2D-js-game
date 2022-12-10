@@ -1,7 +1,7 @@
 //class is not a copy of an object, but points to existing one, use New class to create copies
 import { gameObject } from "./gameObject.js";
 import {InputHandler} from './input.js';
-import{Vec} from './vector.js';
+import {Vec} from './vector.js';
 
 
 
@@ -25,7 +25,7 @@ export class Player extends gameObject{
          this.inputVec.Nnormalize();
 
          //addmovement takes input vec, max speed/s and acceleration
-         this.physics.addMovementInput(this.inputVec, 45);
+         this.physics.addMovementInput(this.inputVec, 55);
     }
 
     draw(context, cameraPosition){

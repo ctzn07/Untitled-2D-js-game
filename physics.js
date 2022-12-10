@@ -1,28 +1,24 @@
 import{Vec} from './vector.js';
 
 export class Physics{
-    constructor(gameObject){
-        this.parent = gameObject
+    constructor(gameobject){
+        this.parent = gameobject
+        this.game = this.parent.game
         //bounding box size
-        this.bBox = { min: new Vec(0-gameObject.spriteSize.x / 2, 0-gameObject.spriteSize.y / 2),
-                            max: new Vec(gameObject.spriteSize.x / 2, gameObject.spriteSize.y / 2)}; 
+        this.bBox = { min: new Vec(0-gameobject.spriteSize.x / 2, 0-gameobject.spriteSize.y / 2),
+                            max: new Vec(gameobject.spriteSize.x / 2, gameobject.spriteSize.y / 2)}; 
         this.velocity = new Vec(0,0)
         this.weight = 1
 
         //add to game instance physics array
         this.worldIndex = []
-        this.updateWorldIndex(this.parent.game, this.parent)
+        this.updateWorldIndex(this.parent.worldLocation)
     }
     update(deltaTime){
-        {
-            
+        {   
              //run collision check
              this.collisionCheck(this.parent.game, this.parent)
 
-            
-            //apply velocity to world location
-            this.parent.worldLocation.Nplus(this.velocity)
-           
             //apply drag
             this.velocity.Nminus(this.velocity.multiplyValue(this.weight).multiplyValue(this.parent.game.deltaTime))
             
@@ -31,8 +27,10 @@ export class Physics{
             
 
             //NOTE: Do collision check before updateWorldIndex()
-            this.updateWorldIndex(this.parent.game, this.parent)
+            this.updateWorldIndex(this.parent.worldLocation)
 
+            //apply velocity to world location
+            this.parent.worldLocation.Nplus(this.velocity)
         }
     }
     addMovementInput(inputVector, MaxSpeed){
@@ -45,15 +43,11 @@ export class Physics{
         this.velocity.Nplus(vec)
     }
 
-    updateWorldIndex(game, parent){
+    updateWorldIndex(location){
         //generate locations that bounding box occupies in the world
-
         let collisionCorners = []
 
-        //determine stepping size for measuring points, one for each corner by default(bbox size)
-        //however, there must be one point per world cell, so pick the smallest value
-        //let stepping = new Vec(Math.min(this.bBox.max.x*2, game.cellSize.x), Math.min(this.bBox.max.y*2, game.cellSize.y))
-        let stepping = (new Vec(this.bBox.max.x, this.bBox.max.y))
+        let stepping = new Vec(this.bBox.max.x, this.bBox.max.y)
 
         for(let x = this.bBox.min.x; x <= this.bBox.max.x; x +=stepping.x){
             //for each X coordinate, do Y loop
@@ -61,33 +55,32 @@ export class Physics{
 
                     //loop between min xy and max xy, given stepping size
                     collisionCorners.push(new Vec(x,y))
- 
 
                     //draw debug for corners
-                    game.drawDebugBox(parent.worldLocation.plus(new Vec(x,y)), new Vec(2,2), 'black')
+                    //this.parent.game.drawDebugBox(this.parent.worldLocation.plus(new Vec(x,y)), new Vec(2,2), 'black')
                 }
         }
 
         collisionCorners.forEach((loc,b,c) => {
         //forEach arguments: copy of an array item, current loop index, the array(?reference?)
-        if(game.locationToIndex(parent.worldLocation.plus(loc)) != this.worldIndex[b]){
-            //remove from old index
-            game.removePhysicsObject(parent, this.worldIndex[b])
-            //get new index
-            this.worldIndex[b] = game.locationToIndex(parent.worldLocation.plus(loc))
-            //set to new index
-            game.addPhysicsObject(parent, this.worldIndex[b])
+        if(this.locationToIndex(location.plus(loc)) != this.worldIndex[b]){
 
-            //BUG: later loop points are removing the object from indexes it still occupies
-            //FIX: re-organize when removals and additions happen
+            //if corner location doesn't match the indexed location, remove object from physics array
+            this.parent.game.removePhysicsObject(this.parent, this.worldIndex[b])
             }
         })
+        collisionCorners.forEach((loc,b,c) => {
+            //get new index
+            this.worldIndex[b] = this.locationToIndex(location.plus(loc))
+            //set to new index
+            this.parent.game.addPhysicsObject(this.parent, this.worldIndex[b])
+            
+            
+            //BUG: later loop points are removing the object from indexes it still occupies
+            //TEMP FIX: split the loop into 2 separate ones, but it is now spamming game.addPhysicsObject
+            //NOTE: Find condition when to add, probably organize what is stored in this.worldIndex array
+        })
     }
-    
-
-
-
-    
 
     collisionCheck(game, parent){
         //Fetch objects from game.physicsObjects using this.worldIndex indexes
@@ -132,28 +125,25 @@ export class Physics{
                         dot =  dot >= 0 ? dot : 0
                         pendot = pendot < 0 ? 1 : 0
 
-                        //do de-pentration
-                        parent.worldLocation.Nplus(penVec.multiplyValue(pendot))
+                        
                         
                         if(otherobj.tags.includes('moving')){
                             //calculate force ratios by dividing object weights against each other
                             let pratio = g1.weight/(g1.weight+g2.weight)
                             let oratio = 1-pratio
+                            let force = vec.normalize().multiplyValue(dot)
+                            this.velocity.Nminus(force.multiplyValue(oratio))
+                            otherobj.physics.velocity.Nplus(force.multiplyValue(pratio))
                             
-                            this.velocity.Nminus(vec.normalize().multiplyValue(dot*oratio))
-                            otherobj.physics.velocity.Nplus(vec.normalize().multiplyValue(dot*pratio))
-                            
-
-                            
-                            
-                            
-                            //add opposite velocity impulses accordingly
+                            //math seems ok but it stutters...
                         }
                         
                         if(otherobj.tags.includes('static')){
                             //reduce any velocity towards the blocking object
                             this.velocity.Nminus(vec.normalize().multiplyValue(dot))
                         }
+                        //do de-pentration
+                        parent.worldLocation.Nplus(penVec.multiplyValue(pendot))
                         
                 }
             });
@@ -193,6 +183,30 @@ export class Physics{
             if(this.bBox.max.y+this.parent.worldLocation.y < otherobj.physics.bBox.min.y + otherobj.worldLocation.y ||
             this.bBox.min.y+this.parent.worldLocation.y > otherobj.physics.bBox.max.y + otherobj.worldLocation.y){return false;}
             return true;
+    }
+
+            //Converting 2D co-ordinates into 1D index
+        //y * width + x
+
+        //Converting 1D index into 2D co-ordinates
+        //y = index / width;
+        //x = index % width;
+
+    locationToIndex(location){
+            //returns 1D index value of world location with accuracy of cellSize
+            
+        let arrWidth = Math.floor((this.game.worldSize.x-this.game.level.topleft.x)/this.game.cellSize.x);
+        let thisY = Math.round((location.y-this.game.level.topleft.y)/this.game.cellSize.y);
+        let thisX = Math.round((location.x-this.game.level.topleft.x)/this.game.cellSize.x);
+
+        return thisY * arrWidth + thisX;
+    }
+
+    indexToLocation(index){
+        //returns 2D world coordinate from 1D index value with accuracy of cellSize
+        let arrWidth = Math.round((this.worldSize.x-this.level.topleft.x)/this.cellSize.x);
+        
+        return new Vec(index%arrWidth, Math.floor(index/arrWidth)).multiply(this.cellSize).plus(this.level.topleft);
     }
 
         //game.Trace()  return template
