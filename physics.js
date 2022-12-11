@@ -1,18 +1,20 @@
 import{Vec} from './vector.js';
 
 export class Physics{
-    constructor(gameobject){
-        this.parent = gameobject
-        this.game = this.parent.game
+    constructor(parent, bSize){
+        this.parent = parent
+        this.game = parent.game
+        this.level = parent.game.level
         //bounding box size
-        this.bBox = { min: new Vec(0-gameobject.spriteSize.x / 2, 0-gameobject.spriteSize.y / 2),
-                            max: new Vec(gameobject.spriteSize.x / 2, gameobject.spriteSize.y / 2)}; 
+        this.bBox = { min: new Vec(0 - bSize.x / 2, 0 - bSize.y / 2),
+                            max: new Vec(bSize.x / 2, bSize.y / 2)}; 
         this.velocity = new Vec(0,0)
         this.weight = 1
 
         //add to game instance physics array
         this.worldIndex = []
-        this.updateWorldIndex(this.parent.worldLocation)
+        this.updateWorldIndex()
+        //console.log(this, 'constructed')
     }
     update(deltaTime){
         {   
@@ -27,7 +29,7 @@ export class Physics{
             
 
             //NOTE: Do collision check before updateWorldIndex()
-            this.updateWorldIndex(this.parent.worldLocation)
+            this.updateWorldIndex()
 
             //apply velocity to world location
             this.parent.worldLocation.Nplus(this.velocity)
@@ -43,12 +45,14 @@ export class Physics{
         this.velocity.Nplus(vec)
     }
 
-    updateWorldIndex(location){
+    updateWorldIndex(){
+
         //generate locations that bounding box occupies in the world
         let collisionCorners = []
 
         let stepping = new Vec(this.bBox.max.x, this.bBox.max.y)
 
+        //populate collisionCorners array
         for(let x = this.bBox.min.x; x <= this.bBox.max.x; x +=stepping.x){
             //for each X coordinate, do Y loop
                 for(let y = this.bBox.min.y; y <= this.bBox.max.x; y+=stepping.y){
@@ -61,25 +65,22 @@ export class Physics{
                 }
         }
 
-        collisionCorners.forEach((loc,b,c) => {
-        //forEach arguments: copy of an array item, current loop index, the array(?reference?)
-        if(this.locationToIndex(location.plus(loc)) != this.worldIndex[b]){
+        //clear all old indexes
+        this.worldIndex.forEach((idx)=>{this.game.removePhysicsObject(this.parent, idx)})
 
-            //if corner location doesn't match the indexed location, remove object from physics array
-            this.parent.game.removePhysicsObject(this.parent, this.worldIndex[b])
-            }
-        })
-        collisionCorners.forEach((loc,b,c) => {
+        collisionCorners.forEach((vec, index, arrayRef) => {
+            //forEach arguments: copy of an array item, current loop index, the array(?reference?)
+            let corner = this.parent.worldLocation.plus(vec)
+
             //get new index
-            this.worldIndex[b] = this.locationToIndex(location.plus(loc))
-            //set to new index
-            this.parent.game.addPhysicsObject(this.parent, this.worldIndex[b])
+            this.worldIndex[index] = this.level.locationToIndex(corner)
+
+            //update parent to physicsObjects array
+            this.game.addPhysicsObject(this.parent, this.worldIndex[index])
             
-            
-            //BUG: later loop points are removing the object from indexes it still occupies
-            //TEMP FIX: split the loop into 2 separate ones, but it is now spamming game.addPhysicsObject
-            //NOTE: Find condition when to add, probably organize what is stored in this.worldIndex array
+
         })
+        
     }
 
     collisionCheck(game, parent){
@@ -170,10 +171,6 @@ export class Physics{
         return new Vec(0, vec.y)
     }
 
-    
-
-
-
     AABBCheck(otherobj){
         //check if any corner coordinate overlap
         if(this.bBox.max.x+this.parent.worldLocation.x < otherobj.physics.bBox.min.x+otherobj.worldLocation.x || 
@@ -184,63 +181,5 @@ export class Physics{
             this.bBox.min.y+this.parent.worldLocation.y > otherobj.physics.bBox.max.y + otherobj.worldLocation.y){return false;}
             return true;
     }
-
-            //Converting 2D co-ordinates into 1D index
-        //y * width + x
-
-        //Converting 1D index into 2D co-ordinates
-        //y = index / width;
-        //x = index % width;
-
-    locationToIndex(location){
-            //returns 1D index value of world location with accuracy of cellSize
-            
-        let arrWidth = Math.floor((this.game.worldSize.x-this.game.level.topleft.x)/this.game.cellSize.x);
-        let thisY = Math.round((location.y-this.game.level.topleft.y)/this.game.cellSize.y);
-        let thisX = Math.round((location.x-this.game.level.topleft.x)/this.game.cellSize.x);
-
-        return thisY * arrWidth + thisX;
-    }
-
-    indexToLocation(index){
-        //returns 2D world coordinate from 1D index value with accuracy of cellSize
-        let arrWidth = Math.round((this.worldSize.x-this.level.topleft.x)/this.cellSize.x);
-        
-        return new Vec(index%arrWidth, Math.floor(index/arrWidth)).multiply(this.cellSize).plus(this.level.topleft);
-    }
-
-        //game.Trace()  return template
-
-        //TraceLocIndex: -1,
-        //TraceLoc: new Vec(0,0),
-        //Objects: [],
-        //HitResult: false,
     
-    
-    
-    
-    
-    
-    
-    
-    
-    /*AABBCheck(otherobj){
-        //AABB collision check against other object
-        
-        if(!otherobj){return false;}    //no object in location -> no collision
-
-        //first check AABB Collision
-        //read more about Separating Axis Theorem (SAT):
-        //https://gamedevelopment.tutsplus.com/tutorials/how-to-create-a-custom-2d-physics-engine-the-basics-and-impulse-resolution--gamedev-6331
-        
-        if(this.bBox.max.x+this.parent.worldLocation.x < otherobj.physics.bBox.min.x+otherobj.worldLocation.x || 
-            this.bBox.min.x+this.parent.worldLocation.x > otherobj.physics.bBox.max.x+otherobj.worldLocation.x)
-            {return false;}
-            
-            if(this.bBox.max.y+this.parent.worldLocation.y < otherobj.physics.bBox.min.y + otherobj.worldLocation.y ||
-            this.bBox.min.y+this.parent.worldLocation.y > otherobj.physics.bBox.max.y + otherobj.worldLocation.y){return false;}
-            
-            // No separating axis found, therefor there is at least one overlapping axis
-            
-    }*/
 }

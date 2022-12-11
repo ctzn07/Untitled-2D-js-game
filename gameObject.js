@@ -1,5 +1,5 @@
 //This is generic GameObject
-import{Vec} from './vector.js';
+import {Vec} from './vector.js';
 import {Physics} from './physics.js';
 import {Animation} from './animation.js'
 
@@ -19,7 +19,7 @@ export class gameObject{
         this.tags = physicsTags;
         if(this.tags.includes('block')){
             //add physics handler for moving objects
-            this.physics = new Physics(this)
+            this.physics = new Physics(this, this.spriteSize)
         }
         //add to game instance gameObjects array for update() and draw() calls
         this.game.gameObjects.push(this)
