@@ -1,6 +1,3 @@
-import{Vec} from './vector.js';
-
-
 export class Animation{
     constructor(gameObject){
         this.parent = gameObject;
@@ -19,9 +16,8 @@ export class Animation{
       //check if animation should switch to
       if(this.animations[this.currentAnimation].exitcondition()){
         this.currentAnimation = this.animations[this.currentAnimation].exitAnimation;
-        //console.log(this.currentAnimation);
       }
     }
 }  
 
-//function lerp (start, end, amt){return (1-amt)*start+amt*end;}
+

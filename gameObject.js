@@ -22,41 +22,32 @@ export class gameObject{
             this.physics = new Physics(this, this.spriteSize)
         }
         //add to game instance gameObjects array for update() and draw() calls
-        this.game.gameObjects.push(this)
-        
+        this.game.gameObjects.push(this) 
     }
+
     update(deltaTime){
         //only update physics on moving objects
-        if(this.tags.includes('moving')){
-            this.physics.update(deltaTime)  
-        }
+        if(this.tags.includes('moving')){this.physics.update(deltaTime)}
 
         //only update animations if there are any
         if(this.animHandler){this.animHandler.update();}
     }
+
     draw(context, cameraPosition, frame){
-        if(this.sprite){    //only draw if sprite is valid
+        //only draw if sprite is valid
+        if(this.sprite){
             //calculate the sprite draw starting position based on sprite index
             var drawStart = new Vec(Math.floor(frame % (this.sprite.width / this.spriteSize.x)), 
-            Math.floor(frame / (this.sprite.width / this.spriteSize.x))).multiply(this.spriteSize);
+                                                Math.floor(frame / (this.sprite.width / this.spriteSize.x))).multiply(this.spriteSize);
 
             //draw specific index of tilemap
             context.drawImage(this.sprite, drawStart.x, drawStart.y, this.spriteSize.x, this.spriteSize.y, 
             Math.floor((this.worldLocation.x-this.spriteSize.x/2)-(cameraPosition.x-this.game.width/2)), 
             Math.floor((this.worldLocation.y-this.spriteSize.y/2)-(cameraPosition.y-this.game.height/2)),
-            this.spriteSize.x, this.spriteSize.y);
-            //arguments as follow:  
-            //image file, sprite startpixel X, sprite startpixel Y, sprite size X, sprite size Y
-            //image draw start X, image draw start Y, relative image draw end X, relative image draw end Y
+            this.spriteSize.x, this.spriteSize.y)
+
             //NOTE:Canvas draw start X and Y need to be integers to avoid graphical glitches
             //(how does it even draw half pixels?)
-
-            //if DrawCollisionDebug = true, Draw collision boxes
-            if(this.game.drawDebug()){
-                this.game.drawDebugBox(this.worldLocation, this.spriteSize, 'red');
-                this.game.drawDebugText(this.worldLocation.minusValue(25), [this.worldLocation.floor().x, this.worldLocation.floor().y], 'black');
-            }
-
         }
     }
 
@@ -67,7 +58,6 @@ export class gameObject{
             //if this is first animation, set it as current animation
             if(!this.animHandler.animcount){
                 this.animHandler.currentAnimation = animObject.animation;
-                //console.log('current animation set to:', this.animHandler.currentAnimation);
             }
             this.animHandler.animcount++;
             //set animation to named index
