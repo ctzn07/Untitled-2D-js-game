@@ -1,17 +1,14 @@
 import {Player} from './player.js';
-import {MapTile} from './mapTile.js';
 import {Vec} from './vector.js';
 import {Level} from './level.js';
-import {gameObject} from './gameObject.js';
-
 
 //load event : JavaScript waits for all dependent resources such as stylesheets and images to be fully loaded and available before it runs
 window.addEventListener('load', function(){
     const canvas = document.getElementById('canvas1');
     const ctx = canvas.getContext('2d');
-    ctx.imageSmoothingEnabled=false;
-    canvas.width = 500;
-    canvas.height = 500;
+    ctx.imageSmoothingEnabled=true;
+    canvas.width = 480;
+    canvas.height = 720;
     const DrawCollisionDebug = true;
 
     class Game{
@@ -22,28 +19,18 @@ window.addEventListener('load', function(){
             this.deltaTime = 0;
             this.timeOld = Date.now();
             this.cameraPosition = new Vec(0,0);
+            
+            this.gameObjects = [];                  //list of all gameobjects
+            this.physicsObjects = [];               //list of all physicsobjects
             this.cellSize = new Vec(256,256); //size of the cell used for physicsObjects array
-
-            
-
-            //since constructor runs on creation, use it to create all the relevant classes as well
-            this.gameObjects = [];  //list of all gameobjects
-            this.physicsObjects = [];  //list of all physicsobjects
-
-            
-            //this.level.generateBlockVolumes()
-            // ISSUE: level does not center to itself around 0,0 coordinates, change canvas size to check
-
-            
-
-            
         }
-        update(deltaTime){
+
+        update(){
             //all updated math goes here
             //update camera position and speed
             this.cameraPosition = this.cameraPosition.lerp(this.player.worldLocation, 0.05);
             
-            //update deltaTime
+            //get new deltaTime
             this.deltaTime = (Date.now() - this.timeOld)/1000;
             this.timeOld = Date.now()
             
@@ -51,9 +38,9 @@ window.addEventListener('load', function(){
             this.gameObjects.forEach(gameObject => {
                 gameObject.update(this.deltaTime);
             });
-
         }
-        draw(context, cameraPosition){
+
+        draw(context){
             //all graphics draws go here
 
             //draw level as bottom layer
@@ -72,28 +59,27 @@ window.addEventListener('load', function(){
                 })
             })
         }
-            this.drawDebugText(this.player.worldLocation.plus(new Vec(50,50)), Math.floor(1/this.deltaTime)+'fps', 'red')
+            //DRAW DEBUG FPS COUNTER
+            let debugTextLoc = this.cameraPosition.plus(new Vec(this.width*-1/2+5, this.height*-1/2+15))
+            this.drawDebugText(debugTextLoc, Math.floor(1/this.deltaTime)+'fps', 'red')
         }
 
         addPhysicsObject(gameobject, index){
             //add GameObjects to physicsObjects worldindex
-            /*
-            physicsObjects object template
-            Object.create({
-                subItems: [], 
-                add: function(obj){this.subItems.push(obj);}, 
-                remove: function(obj){this.subItems.splice(this.subItems.indexOf(obj), 1);}
-            });
-            */
 
-            //see if world index already has object to hold all the objects
+            //check if subItem cell already exists in that worldIndex
             if(!this.physicsObjects[index]){
                 //add new subItems array to world index
                 this.physicsObjects[index] = Object.create({
                     subItems: [], 
                     add: function(obj){
-                        if(!this.subItems.includes(obj)){this.subItems.push(obj);}}, 
-                    remove: function(obj){if(this.subItems.includes(obj)){this.subItems.splice(this.subItems.indexOf(obj), 1);}}
+                        if(!this.subItems.includes(obj)){
+                            this.subItems.push(obj)}
+                    }, 
+                    remove: function(obj){
+                        if(this.subItems.includes(obj)){
+                            this.subItems.splice(this.subItems.indexOf(obj), 1)}
+                    }
             });}
 
             //add gameobject to subItems array
@@ -125,6 +111,7 @@ window.addEventListener('load', function(){
             ctx.fillStyle = color;
             ctx.fillText(message, location.x-(this.cameraPosition.x-this.width/2), location.y-(this.cameraPosition.y-this.height/2));
         }
+
         drawDebugLine(from, to, color = 'blue'){
             ctx.beginPath();
             ctx.strokeStyle = color;
@@ -147,10 +134,6 @@ window.addEventListener('load', function(){
  
     //param list: game, spawn position, spritesheet ref, spritesheet size
     game.player = new Player(game, new Vec(-100,-100), player, new Vec(4,2))
-    
-    
-    
-
 
     function animate(){
         ctx.clearRect(0,0,canvas.width, canvas.height);

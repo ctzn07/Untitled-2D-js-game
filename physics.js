@@ -5,16 +5,15 @@ export class Physics{
         this.parent = parent
         this.game = parent.game
         this.level = parent.game.level
+
         //bounding box size
         this.bBox = { min: new Vec(0 - bSize.x / 2, 0 - bSize.y / 2),
                             max: new Vec(bSize.x / 2, bSize.y / 2)}; 
         this.velocity = new Vec(0,0)
         this.weight = 1
 
-        //add to game instance physics array
         this.worldIndex = []
         this.updateWorldIndex()
-        //console.log(this, 'constructed')
     }
     update(deltaTime){
         {   
@@ -22,9 +21,9 @@ export class Physics{
              this.collisionCheck(this.parent.game, this.parent)
 
             //apply drag
-            this.velocity.Nminus(this.velocity.multiplyValue(this.weight).multiplyValue(this.parent.game.deltaTime))
+            this.velocity.Nminus(this.velocity.multiplyValue(this.weight).multiplyValue(deltaTime))
             
-            //to prevent absurdly small calculations
+            //prevent absurdly small calculations
             if(this.velocity.length()<0.001){this.velocity.zero()}
             
 
@@ -46,7 +45,6 @@ export class Physics{
     }
 
     updateWorldIndex(){
-
         //generate locations that bounding box occupies in the world
         let collisionCorners = []
 
@@ -69,7 +67,7 @@ export class Physics{
         this.worldIndex.forEach((idx)=>{this.game.removePhysicsObject(this.parent, idx)})
 
         collisionCorners.forEach((vec, index, arrayRef) => {
-            //forEach arguments: copy of an array item, current loop index, the array(?reference?)
+            //forEach arguments: copy of an array item, current loop index, the array
             let corner = this.parent.worldLocation.plus(vec)
 
             //get new index
@@ -77,10 +75,7 @@ export class Physics{
 
             //update parent to physicsObjects array
             this.game.addPhysicsObject(this.parent, this.worldIndex[index])
-            
-
-        })
-        
+        })  
     }
 
     collisionCheck(game, parent){
@@ -121,20 +116,17 @@ export class Physics{
                         let dot = this.velocity.dot(vec.normalize())
                         let pendot = this.velocity.normalize().dot(penVec.normalize())
                         
-                        
                         //only accept above 0 dot values(but not abs)
                         dot =  dot >= 0 ? dot : 0
-                        pendot = pendot < 0 ? 1 : 0
-
-                        
+                        pendot = pendot < 0 ? 1 : 0                     
                         
                         if(otherobj.tags.includes('moving')){
                             //calculate force ratios by dividing object weights against each other
-                            let pratio = g1.weight/(g1.weight+g2.weight)
-                            let oratio = 1-pratio
+                            let g1ratio = g1.weight/(g1.weight+g2.weight)
+                            let g2ratio = 1-pratio
                             let force = vec.normalize().multiplyValue(dot)
-                            this.velocity.Nminus(force.multiplyValue(oratio))
-                            otherobj.physics.velocity.Nplus(force.multiplyValue(pratio))
+                            this.velocity.Nminus(force.multiplyValue(g2ratio))
+                            otherobj.physics.velocity.Nplus(force.multiplyValue(g1ratio))
                             
                             //math seems ok but it stutters...
                         }
@@ -170,7 +162,6 @@ export class Physics{
         if(Math.abs(vec.x)>Math.abs(vec.y))return new Vec(vec.x, 0)
         return new Vec(0, vec.y)
     }
-
     AABBCheck(otherobj){
         //check if any corner coordinate overlap
         if(this.bBox.max.x+this.parent.worldLocation.x < otherobj.physics.bBox.min.x+otherobj.worldLocation.x || 

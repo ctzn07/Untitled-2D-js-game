@@ -1,4 +1,3 @@
-import { Vec } from "./vector.js";
 import { Physics } from "./physics.js";
 
 export class BlockingVolume{
