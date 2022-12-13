@@ -1,29 +1,28 @@
+import { gameObject } from "./gameObject.js";
 import { Vec } from './vector.js';
 import { BlockingVolume } from './blockingvolume.js';
 
-export class Level{
-    constructor(game, mapSprite, collisionSprite){
-        this.game = game
-        this.mapSprite = mapSprite
-        this.collisionSprite = collisionSprite
-        this.topleft = new Vec(0-this.mapSprite.width/2, 0-this.mapSprite.height/2)
+export class Level extends gameObject{
+    constructor(game, spawnPos, tilemap){
+        super(game, spawnPos, ['static', 'overlap'], tilemap, new Vec(1,1))
+
+        this.collisionSprite = testlevel_collision
+        this.topleft = new Vec(0-this.spriteSize.x/2, 0-this.spriteSize.y/2)
         this.blockingVolumes = []
-        this.worldSize = new Vec(mapSprite.width, mapSprite.height);
     }
 
-    draw(context){
-            context.drawImage(this.mapSprite, 0, 0, this.mapSprite.width, this.mapSprite.height,
-                this.game.width/2-this.game.cameraPosition.x+this.topleft.x, 
-                this.game.height/2-this.game.cameraPosition.y+this.topleft.y, 
-                this.mapSprite.width, 
-                this.mapSprite.height);
+    draw(context, cameraPosition){
+        super.draw(context, cameraPosition, this.animationFrame)
     }
     
     generateBlockVolumes(){
         let img = this.collisionSprite
         let canvas = document.createElement('canvas');
         let context = canvas.getContext("2d", { willReadFrequently: true });
+
         let stepping = new Vec(32,32)
+        let blankSprite = new Image(stepping.x, stepping.y)
+        //physics measures bounding box from image size, creating empty image
 
         //Issue:        For some reason the loop doesn't complete with full size image
         //Solution:    Scale down the image
@@ -39,10 +38,10 @@ export class Level{
                 const b = context.getImageData(x, y, 1, 1).data[0];
                 //b is pixel red value, using different could be used to spawn other type of map elements
 
-                let wx = x*stepping.x+this.topleft.x+stepping.x/2
-                let wy = y*stepping.y+this.topleft.y+stepping.y/2
+                let wx = x*stepping.x+this.topleft.x+stepping.x/2+this.worldLocation.x
+                let wy = y*stepping.y+this.topleft.y+stepping.y/2+this.worldLocation.y
 
-                if(b)this.blockingVolumes.push(new BlockingVolume(this.game, new Vec(wx,wy), ['static', 'blocking'], stepping))
+                if(b)this.blockingVolumes.push(new BlockingVolume(this.game,new Vec(wx,wy),blankSprite))
                 
             }
         }
@@ -51,12 +50,12 @@ export class Level{
     locationToIndex(location){
         //Converting 2D co-ordinates into 1D index
         //y * width + x
-        
-        let arrWidth = Math.floor((this.worldSize.x-this.topleft.x)/this.game.cellSize.x);
+        let arrWidth = Math.floor((this.spriteSize.x-this.topleft.x)/this.game.cellSize.x);
         let thisX = Math.round((location.x-this.topleft.x)/this.game.cellSize.x);
         let thisY = Math.round((location.y-this.topleft.y)/this.game.cellSize.y);
 
         //returns 1D index value of world location with accuracy of cellSize
+        
         return thisY * arrWidth + thisX;
     }
 
@@ -65,7 +64,7 @@ export class Level{
         //y = index / width;
         //x = index % width;
         
-        let arrWidth = Math.round((this.worldSize.x-this.topleft.x)/this.game.cellSize.x);
+        let arrWidth = Math.round((this.spriteSize.x-this.topleft.x)/this.game.cellSize.x);
 
         //returns 2D world coordinate from 1D index value with accuracy of cellSize
         return new Vec(index%arrWidth, Math.floor(index/arrWidth)).multiply(this.cellSize).plus(this.level.topleft);

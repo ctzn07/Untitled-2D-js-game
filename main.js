@@ -7,8 +7,8 @@ window.addEventListener('load', function(){
     const canvas = document.getElementById('canvas1');
     const ctx = canvas.getContext('2d');
     ctx.imageSmoothingEnabled=true;
-    canvas.width = 480;
-    canvas.height = 720;
+    canvas.width = 800;
+    canvas.height = 1000;
     const DrawCollisionDebug = true;
 
     class Game{
@@ -22,7 +22,7 @@ window.addEventListener('load', function(){
             
             this.gameObjects = [];                  //list of all gameobjects
             this.physicsObjects = [];               //list of all physicsobjects
-            this.cellSize = new Vec(256,256); //size of the cell used for physicsObjects array
+            this.cellSize = new Vec(256,256);  //size of the cell used for physicsObjects array
         }
 
         update(){
@@ -44,7 +44,7 @@ window.addEventListener('load', function(){
             //all graphics draws go here
 
             //draw level as bottom layer
-            this.level.draw(context);
+            this.level.draw(context, this.cameraPosition);
 
             //run draw() on all gameobjects
             this.gameObjects.forEach(gameObject => {
@@ -55,7 +55,7 @@ window.addEventListener('load', function(){
             if(true){
             this.physicsObjects.forEach(a =>{
                 a.subItems.forEach(b=>{
-                    this.drawDebugBox(b.physics.parent.worldLocation, b.physics.bBox.max.multiplyValue(2), 'gray')
+                    this.drawDebugBox(b.physics.parent.worldLocation, b.physics.bBox.max.multiplyValue(2), 'red')
                 })
             })
         }
@@ -129,11 +129,13 @@ window.addEventListener('load', function(){
 
     //this triggers the creation of new game class, and run constructor with it
     const game = new Game(canvas.width, canvas.height)
-    game.level = new Level(game, testlevel, testlevel_collision)
+    game.level = new Level(game, new Vec(0,0), testlevel)
+    game.gameObjects.push(game.level)
     game.level.generateBlockVolumes()
  
     //param list: game, spawn position, spritesheet ref, spritesheet size
-    game.player = new Player(game, new Vec(-100,-100), player, new Vec(4,2))
+    game.player = new Player(game, new Vec(-100,0), player, new Vec(4,2))
+    game.gameObjects.push(game.player)
 
     function animate(){
         ctx.clearRect(0,0,canvas.width, canvas.height);

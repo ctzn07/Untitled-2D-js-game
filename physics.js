@@ -45,7 +45,9 @@ export class Physics{
     }
 
     updateWorldIndex(){
+        
         //generate locations that bounding box occupies in the world
+        
         let collisionCorners = []
 
         let stepping = new Vec(this.bBox.max.x, this.bBox.max.y)
@@ -76,6 +78,7 @@ export class Physics{
             //update parent to physicsObjects array
             this.game.addPhysicsObject(this.parent, this.worldIndex[index])
         })  
+        
     }
 
     collisionCheck(game, parent){

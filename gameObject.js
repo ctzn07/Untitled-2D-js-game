@@ -4,7 +4,7 @@ import {Physics} from './physics.js';
 import {Animation} from './animation.js'
 
 export class gameObject{
-    constructor(game, spawnPos, physicsTags =[], tilemap, tilemapSize = new Vec(0,0), ){
+    constructor(game, spawnPos, physicsTags =[], tilemap, tilemapSize = new Vec(0,0)){
         this.game = game
         this.worldLocation = spawnPos
 
@@ -14,7 +14,7 @@ export class gameObject{
         this.animationFrame = 0
         //only add animation handler if there's something to animate
         if(tilemapSize.x > 1 || tilemapSize.y > 1)this.animHandler = new Animation(this)
-
+        
         //physics
         this.tags = physicsTags;
         if(this.tags.includes('block')){
@@ -22,7 +22,7 @@ export class gameObject{
             this.physics = new Physics(this, this.spriteSize)
         }
         //add to game instance gameObjects array for update() and draw() calls
-        this.game.gameObjects.push(this) 
+        //this.game.gameObjects.push(this) 
     }
 
     update(deltaTime){
@@ -37,17 +37,26 @@ export class gameObject{
         //only draw if sprite is valid
         if(this.sprite){
             //calculate the sprite draw starting position based on sprite index
-            var drawStart = new Vec(Math.floor(frame % (this.sprite.width / this.spriteSize.x)), 
-                                                Math.floor(frame / (this.sprite.width / this.spriteSize.x))).multiply(this.spriteSize);
-
+            var drawStart = new Vec(
+            Math.floor(frame % (this.sprite.width / this.spriteSize.x)),
+            Math.floor(frame / (this.sprite.width / this.spriteSize.x))
+            ).multiply(this.spriteSize);
             //draw specific index of tilemap
-            context.drawImage(this.sprite, drawStart.x, drawStart.y, this.spriteSize.x, this.spriteSize.y, 
-            Math.floor((this.worldLocation.x-this.spriteSize.x/2)-(cameraPosition.x-this.game.width/2)), 
-            Math.floor((this.worldLocation.y-this.spriteSize.y/2)-(cameraPosition.y-this.game.height/2)),
-            this.spriteSize.x, this.spriteSize.y)
 
-            //NOTE:Canvas draw start X and Y need to be integers to avoid graphical glitches
-            //(how does it even draw half pixels?)
+            context.drawImage(
+                this.sprite, 
+                drawStart.x, 
+                drawStart.y, 
+                this.spriteSize.x,  //relative position
+                this.spriteSize.y,  //relative position
+                Math.floor(this.worldLocation.x-(this.spriteSize.x - this.game.width)/2-cameraPosition.x),
+                Math.floor(this.worldLocation.y-(this.spriteSize.y - this.game.height)/2-cameraPosition.y),
+                this.spriteSize.x,  //relative position
+                this.spriteSize.y   //relative position
+                )
+            //drawImage(image, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight)
+ 
+
         }
     }
 

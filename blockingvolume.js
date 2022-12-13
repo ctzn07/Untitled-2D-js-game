@@ -1,11 +1,9 @@
-import { Physics } from "./physics.js";
+import { gameObject } from "./gameObject.js";
+import { Vec } from "./vector.js";
 
-export class BlockingVolume{
-    constructor(game, spawnPos, physicsTags, size){
-        this.game = game
-        this.worldLocation = spawnPos
-        this.bSize = size
-        this.tags = physicsTags;
-        this.physics = new Physics(this, this.bSize)
+
+export class BlockingVolume extends gameObject{
+    constructor(game, spawnPos, sprite){
+        super(game, spawnPos, ['static', 'block'], sprite, new Vec(1,1));
     }
 }
