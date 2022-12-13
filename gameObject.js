@@ -5,6 +5,13 @@ import {Animation} from './animation.js'
 
 export class gameObject{
     constructor(game, spawnPos, physicsTags =[], tilemap, tilemapSize = new Vec(0,0)){
+        //Throw error message to console if one of the arguments is not valid
+        Array.from(arguments).forEach((a, b) =>{
+            if(a)return true;
+            console.log(this, ' : argument ', b, ' is not valid');
+            return false;
+        })
+
         this.game = game
         this.worldLocation = spawnPos
 
