@@ -19,6 +19,7 @@ export class gameObject{
         this.sprite = tilemap
         this.spriteSize = new Vec(this.sprite.width, this.sprite.height).divide(tilemapSize)
         this.animationFrame = 0
+        this.orientation = new Vec(1,0)
         //only add animation handler if there's something to animate
         if(tilemapSize.x > 1 || tilemapSize.y > 1)this.animHandler = new Animation(this)
         
@@ -29,7 +30,7 @@ export class gameObject{
             this.physics = new Physics(this, this.spriteSize)
         }
         //add to game instance gameObjects array for update() and draw() calls
-        //this.game.gameObjects.push(this) 
+        this.game.gameObjects.push(this)
     }
 
     update(deltaTime){

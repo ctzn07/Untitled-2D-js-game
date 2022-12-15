@@ -1,6 +1,7 @@
 import {Player} from './player.js';
 import {Vec} from './vector.js';
 import {Level} from './level.js';
+import {gameObject} from './gameObject.js';
 
 //load event : JavaScript waits for all dependent resources such as stylesheets and images to be fully loaded and available before it runs
 window.addEventListener('load', function(){
@@ -53,12 +54,17 @@ window.addEventListener('load', function(){
 
             // DRAW DEBUG BOX FOR ALL PHYSICS OBJECTS
             if(true){
-            this.physicsObjects.forEach(a =>{
+            this.physicsObjects.forEach((a, a_idx) =>{
+                //Draw existing Physics cells
+                this.drawDebugBox(this.level.indexToLocation(a_idx), this.cellSize, 'gray')
+                this.drawDebugText(this.level.indexToLocation(a_idx), a_idx, 'blue')
                 a.subItems.forEach(b=>{
+                    //Draw Physics object bounding boxes
                     this.drawDebugBox(b.physics.parent.worldLocation, b.physics.bBox.max.multiplyValue(2), 'red')
                 })
             })
         }
+
             //DRAW DEBUG FPS COUNTER
             let debugTextLoc = this.cameraPosition.plus(new Vec(this.width*-1/2+5, this.height*-1/2+15))
             this.drawDebugText(debugTextLoc, Math.floor(1/this.deltaTime)+'fps', 'red')
@@ -71,14 +77,14 @@ window.addEventListener('load', function(){
             if(!this.physicsObjects[index]){
                 //add new subItems array to world index
                 this.physicsObjects[index] = Object.create({
-                    subItems: [], 
+                    subItems: new Set(), 
                     add: function(obj){
-                        if(!this.subItems.includes(obj)){
-                            this.subItems.push(obj)}
+                        if(!this.subItems.has(obj)){
+                            this.subItems.add(obj)}
                     }, 
                     remove: function(obj){
-                        if(this.subItems.includes(obj)){
-                            this.subItems.splice(this.subItems.indexOf(obj), 1)}
+                        if(this.subItems.has(obj)){
+                            this.subItems.delete(obj)}
                     }
             });}
 
@@ -130,12 +136,14 @@ window.addEventListener('load', function(){
     //this triggers the creation of new game class, and run constructor with it
     const game = new Game(canvas.width, canvas.height)
     game.level = new Level(game, new Vec(0,0), testlevel)
-    game.gameObjects.push(game.level)
     game.level.generateBlockVolumes()
+    const brl = new gameObject(game, new Vec(100,200), ['moving', 'block'], barrel, new Vec(1,1))
+    brl.physics.weight = 30
+    
  
     //param list: game, spawn position, spritesheet ref, spritesheet size
     game.player = new Player(game, new Vec(-100,0), player, new Vec(4,2))
-    game.gameObjects.push(game.player)
+    
 
     function animate(){
         ctx.clearRect(0,0,canvas.width, canvas.height);

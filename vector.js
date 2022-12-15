@@ -14,6 +14,7 @@ export class Vec{
     divideValue(value){return new Vec(this.x / value || 0, this.y / value || 0);}
     length(){return Math.sqrt(this.x * this.x + this.y * this.y || 0);}
     normalize(){return new Vec(this.x/this.length() || 0, this.y/this.length() || 0);}
+    mirror(normalVec){return this.minus(normalVec.multiplyValue(this.dot(normalVec)*2))}
     zero(){this.x = 0, this.y = 0;}
     toString(){return `Vec{x: ${this.x}, y: ${this.y}}`;}
     floor(){return new Vec(Math.floor(this.x), Math.floor(this.y));}

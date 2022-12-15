@@ -8,12 +8,23 @@ export class Physics{
 
         //bounding box size
         this.bBox = { min: new Vec(0 - bSize.x / 2, 0 - bSize.y / 2),
-                            max: new Vec(bSize.x / 2, bSize.y / 2)}; 
+                            max: new Vec(bSize.x / 2, bSize.y / 2),
+                            wLoc: this.parent.worldLocation, 
+                            getLoc:function(){
+                                return [
+                                new Vec(this.wLoc.x+this.min.x, this.wLoc.y+this.min.y),
+                                new Vec(this.wLoc.x+this.max.x, this.wLoc.y+this.min.y),
+                                new Vec(this.wLoc.x+this.min.x, this.wLoc.y+this.max.y),
+                                new Vec(this.wLoc.x+this.max.x, this.wLoc.y+this.max.y)
+                                ]}} 
         this.velocity = new Vec(0,0)
         this.weight = 1
+        //using Set() for worldIndex since duplicates would be just extra luggage
+        this.worldIndex = new Set()
 
-        this.worldIndex = []
-        this.updateWorldIndex()
+        //initialize worldIndex for objects that don't actively run collision check
+        this.bBox.getLoc().forEach(loc=>{this.worldIndex.add(this.level.locationToIndex(loc))})
+        this.worldIndex.forEach(a=>{this.game.addPhysicsObject(this.parent, a)})
     }
     update(deltaTime){
         {   
@@ -21,17 +32,18 @@ export class Physics{
              this.collisionCheck(this.parent.game, this.parent)
 
             //apply drag
-            this.velocity.Nminus(this.velocity.multiplyValue(this.weight).multiplyValue(deltaTime))
+            //this.velocity.Nminus(this.velocity.multiplyValue(this.weight).multiplyValue(deltaTime))
+            this.velocity.Nminus(this.getDrag(deltaTime))
             
             //prevent absurdly small calculations
             if(this.velocity.length()<0.001){this.velocity.zero()}
-            
-
-            //NOTE: Do collision check before updateWorldIndex()
-            this.updateWorldIndex()
 
             //apply velocity to world location
             this.parent.worldLocation.Nplus(this.velocity)
+
+            //update orientation
+            this.parent.orientation = this.velocity.plus(this.parent.orientation).normalize()
+
         }
     }
     addMovementInput(inputVector, MaxSpeed){
@@ -44,108 +56,58 @@ export class Physics{
         this.velocity.Nplus(vec)
     }
 
-    updateWorldIndex(){
-        
-        //generate locations that bounding box occupies in the world
-        
-        let collisionCorners = []
-
-        let stepping = new Vec(this.bBox.max.x*2, this.bBox.max.y*2)
-
-        //populate collisionCorners array
-        for(let x = this.bBox.min.x; x <= this.bBox.max.x; x +=stepping.x){
-            //for each X coordinate, do Y loop
-                for(let y = this.bBox.min.y; y <= this.bBox.max.x; y+=stepping.y){
-
-                    //loop between min xy and max xy, given stepping size
-                    collisionCorners.push(new Vec(x,y))
-
-                    //draw debug for corners
-                    this.parent.game.drawDebugBox(this.parent.worldLocation.plus(new Vec(x,y)), new Vec(2,2), 'black')
-                }
-        }
-
-        //clear all old indexes
-        this.worldIndex.forEach((idx)=>{this.game.removePhysicsObject(this.parent, idx)})
-
-        collisionCorners.forEach((vec, index, arrayRef) => {
-            //forEach arguments: copy of an array item, current loop index, the array
-            let corner = this.parent.worldLocation.plus(vec)
-
-            //get new index
-            this.worldIndex[index] = this.level.locationToIndex(corner)
-
-            //update parent to physicsObjects array
-            this.game.addPhysicsObject(this.parent, this.worldIndex[index])
-        })  
-        
-    }
 
     collisionCheck(game, parent){
-        //Fetch objects from game.physicsObjects using this.worldIndex indexes
-        this.worldIndex.forEach(index =>{
-            //cycle through all nearby worldIndexes
-            game.physicsObjects[index].subItems.forEach(otherobj => {
-                //fetch subItems from worldIndex
-                let g1 = {
-                    box: parent.physics.bBox,
-                    min: parent.physics.bBox.min,
-                    max: parent.physics.bBox.max,
-                    loc : parent.worldLocation,
-                    weight: parent.physics.weight
-                }
-                let g2 = {
-                    box: otherobj.physics.bBox,
-                    min: otherobj.physics.bBox.min,
-                    max: otherobj.physics.bBox.max,
-                    loc: otherobj.worldLocation,
-                    weight: otherobj.physics.weight
-                }
+        //remove all corners from physics object list
+        this.worldIndex.forEach(idx =>{game.removePhysicsObject(this.parent, idx)})
+
+        //clear index list
+        this.worldIndex.clear()
+
+        //get new index list
+        this.bBox.getLoc().forEach((vec, idx, arr) =>
+            {this.worldIndex.add(this.level.locationToIndex(vec))})
+
+        //add new indexes to physics object list
+        this.worldIndex.forEach(idx =>{game.addPhysicsObject(this.parent, idx)})
+
+        //For each worldIndex value...
+        this.worldIndex.forEach(idx =>{
+            //...fetch subItems that share the same cell
+            game.physicsObjects[idx].subItems.forEach(otherobj => {
+                //checks against single subItem
                 if(otherobj != parent && this.AABBCheck(otherobj)){
-                    //if AABB check returns true and the object isn't itself, calculate penetration
+                        //get direction vector to otherobj
+                        let vec = parent.worldLocation.plus(this.velocity).minus(otherobj.worldLocation)
+                        //.plus(this.velocity) helps with getting stuck on collision box edges
+                        //this is inherent issue of this.maxSide() method
 
-                        //localspace vector of the collision
-                        let vec = otherobj.worldLocation.minus(parent.worldLocation)
+                        vec = this.maxSide(vec).normalize()
                         
-                        let penVec = new Vec
-                        (vec.x - g1.box.max.x*Math.sign(vec.x) - g2.box.max.x*Math.sign(vec.x),
-                         vec.y - g1.box.max.y*Math.sign(vec.y) - g2.box.max.y*Math.sign(vec.y))
-
-                        //get the collision side of g2 where the penetration is measured
-                        penVec = this.minSide(penVec)
-                        vec = this.maxSide(vec)
-
-                        //dot values to make sure depen and velocity reduction point away from the wall
-                        let dot = this.velocity.dot(vec.normalize())
-                        let pendot = this.velocity.normalize().dot(penVec.normalize())
-                        
-                        //only accept above 0 dot values(but not abs)
-                        dot =  dot >= 0 ? dot : 0
-                        pendot = pendot < 0 ? 1 : 0                     
+                        //get force values in wall direction
+                        let dot = vec.dot(this.velocity)
+                        dot = dot < 0 ? dot : 0
                         
                         if(otherobj.tags.includes('moving')){
-                            //calculate force ratios by dividing object weights against each other
-                            let g1ratio = g1.weight/(g1.weight+g2.weight)
-                            let g2ratio = 1-pratio
-                            let force = vec.normalize().multiplyValue(dot)
-                            this.velocity.Nminus(force.multiplyValue(g2ratio))
-                            otherobj.physics.velocity.Nplus(force.multiplyValue(g1ratio))
+                            let ratio = this.weight/(this.weight+otherobj.physics.weight)
                             
-                            //math seems ok but it stutters...
+                            this.velocity.Nminus(vec.multiplyValue(dot))
+                            otherobj.physics.velocity.Nplus(vec.multiplyValue(dot))
+                            
+                            
+                            
                         }
-                        
+
                         if(otherobj.tags.includes('static')){
-                            //reduce any velocity towards the blocking object
-                            this.velocity.Nminus(vec.normalize().multiplyValue(dot))
+                            //simply reduce any velocity toward wall
+                            this.velocity.Nminus(vec.multiplyValue(dot))
                         }
-                        //do de-pentration
-                        parent.worldLocation.Nplus(penVec.multiplyValue(pendot))
                         
                 }
             });
-
-            
         })
+
+        
     }
 
     boxClamp(box, vec){
@@ -165,6 +127,9 @@ export class Physics{
         if(Math.abs(vec.x)>Math.abs(vec.y))return new Vec(vec.x, 0)
         return new Vec(0, vec.y)
     }
+    cornerSnap(vec){
+        return vec.normalize().round().normalize().multiplyValue(vec.length())
+    }
     AABBCheck(otherobj){
         //check if any corner coordinate overlap
         if(this.bBox.max.x+this.parent.worldLocation.x < otherobj.physics.bBox.min.x+otherobj.worldLocation.x || 
@@ -175,5 +140,9 @@ export class Physics{
             this.bBox.min.y+this.parent.worldLocation.y > otherobj.physics.bBox.max.y + otherobj.worldLocation.y){return false;}
             return true;
     }
+    getDrag(deltaTime){
+        return this.velocity.multiplyValue(this.weight).multiplyValue(deltaTime)
+    }
+
     
 }

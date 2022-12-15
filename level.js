@@ -50,9 +50,9 @@ export class Level extends gameObject{
     locationToIndex(location){
         //Converting 2D co-ordinates into 1D index
         //y * width + x
-        let arrWidth = Math.floor((this.spriteSize.x-this.topleft.x)/this.game.cellSize.x);
-        let thisX = Math.round((location.x-this.topleft.x)/this.game.cellSize.x);
-        let thisY = Math.round((location.y-this.topleft.y)/this.game.cellSize.y);
+        let arrWidth = Math.floor((this.spriteSize.x-this.topleft.x)/this.game.cellSize.x)
+        let thisX = Math.round((location.x-this.topleft.x)/this.game.cellSize.x)
+        let thisY = Math.round((location.y-this.topleft.y)/this.game.cellSize.y)
 
         //returns 1D index value of world location with accuracy of cellSize
         
@@ -64,10 +64,13 @@ export class Level extends gameObject{
         //y = index / width;
         //x = index % width;
         
-        let arrWidth = Math.round((this.spriteSize.x-this.topleft.x)/this.game.cellSize.x);
+        let arrWidth = Math.round((this.spriteSize.x-this.topleft.x)/this.game.cellSize.x)
+        let thisX = index%arrWidth
+        //let thisY = Math.floor(index/arrWidth).multiply(this.game.cellSize).plus(this.topleft)
+        let thisY = Math.floor(index/arrWidth)
 
         //returns 2D world coordinate from 1D index value with accuracy of cellSize
-        return new Vec(index%arrWidth, Math.floor(index/arrWidth)).multiply(this.cellSize).plus(this.level.topleft);
+        return new Vec(thisX, thisY).multiply(this.game.cellSize).plus(this.topleft)
     } 
 }
 
