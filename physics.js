@@ -50,7 +50,7 @@ export class Physics{
         
         let collisionCorners = []
 
-        let stepping = new Vec(this.bBox.max.x, this.bBox.max.y)
+        let stepping = new Vec(this.bBox.max.x*2, this.bBox.max.y*2)
 
         //populate collisionCorners array
         for(let x = this.bBox.min.x; x <= this.bBox.max.x; x +=stepping.x){
@@ -61,7 +61,7 @@ export class Physics{
                     collisionCorners.push(new Vec(x,y))
 
                     //draw debug for corners
-                    //this.parent.game.drawDebugBox(this.parent.worldLocation.plus(new Vec(x,y)), new Vec(2,2), 'black')
+                    this.parent.game.drawDebugBox(this.parent.worldLocation.plus(new Vec(x,y)), new Vec(2,2), 'black')
                 }
         }
 
